@@ -16,6 +16,7 @@ import { logger } from '@/lib/logger';
 import { COLLECTIONS } from '@/lib/constants';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { cn } from '@/lib/utils';
 
 /**
  * Registration page component for creating new environment nodes.
@@ -29,32 +30,38 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  /**
+   * Validates registration input with enhanced security and XSS protection.
+   */
   const validateInput = useCallback((): boolean => {
     const trimmedName = fullName.trim();
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().toLowerCase();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[0-9]).{8,}$/;
+    // At least 8 chars, 1 number, 1 uppercase, 1 lowercase
+    const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+    // Block script injection in name
+    const xssRegex = /<[^>]*>|javascript:/i;
     const newErrors: Record<string, string> = {};
 
     if (trimmedName.length < 2 || trimmedName.length > 100) {
-      newErrors.fullName = "Name must be between 2 and 100 characters.";
+      newErrors.fullName = 'Name must be between 2 and 100 characters.';
     }
-
+    if (xssRegex.test(trimmedName)) {
+      newErrors.fullName = 'Name contains invalid characters.';
+    }
     if (!emailRegex.test(trimmedEmail)) {
-      newErrors.email = "Please enter a valid email address.";
+      newErrors.email = 'Please enter a valid email address.';
     }
-
     if (!passwordRegex.test(password)) {
-      newErrors.password = "Password must be at least 8 characters and include a number.";
+      newErrors.password = 'Password must be 8+ characters with uppercase, lowercase and a number.';
     }
 
     setErrors(newErrors);
-    
+
     if (Object.keys(newErrors).length > 0) {
-      toast({ variant: "destructive", title: "Validation Error", description: "Please check the form for errors." });
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please check the form for errors.' });
       return false;
     }
-
     return true;
   }, [fullName, email, password, toast]);
 
@@ -72,7 +79,7 @@ export default function RegisterPage() {
 
       const userData = {
         fullName: fullName.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         greenPoints: 0,
         sustainabilityScore: 0,
         level: 'Seedling',
@@ -83,7 +90,11 @@ export default function RegisterPage() {
       const userRef = doc(db, COLLECTIONS.USERS, user.uid);
       await setDoc(userRef, userData).catch((err) => {
         if (err.code === 'permission-denied') {
-          const pErr = new FirestorePermissionError({ path: userRef.path, operation: 'create', requestResourceData: userData });
+          const pErr = new FirestorePermissionError({ 
+            path: userRef.path, 
+            operation: 'create', 
+            requestResourceData: userData 
+          });
           errorEmitter.emit('permission-error', pErr);
           throw pErr;
         }

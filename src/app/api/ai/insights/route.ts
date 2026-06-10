@@ -2,6 +2,7 @@ import { ai } from '@/ai/genkit';
 import { generateReductionPlanFlow } from '@/ai/flows/generate-reduction-plan';
 import { NextRequest } from 'next/server';
 
+// Sliding window rate limiter
 const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_THRESHOLD = 10;
 const RATE_LIMIT_WINDOW = 60 * 1000;
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Rate Limiting
     const ip = req.headers.get('x-forwarded-for') || 'anonymous';
     const now = Date.now();
     const timestamps = rateLimitMap.get(ip) || [];
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error: any) {
+    console.error('[AI Insights Error]:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

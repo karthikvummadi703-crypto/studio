@@ -24,7 +24,7 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
 } catch (error) {
-  // Centralized logging for initialization errors
+  console.error('Firebase initialization error', error);
   throw error;
 }
 
