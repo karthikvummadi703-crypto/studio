@@ -21,9 +21,18 @@ import { cn } from '@/lib/utils';
 import { CHALLENGES } from '@/lib/challenges';
 import { getLevelFromPoints } from '@/lib/levels';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
+import type { UserProfile, CarbonRecord } from '@/types';
+
+interface HeroMetricProps {
+  label: string;
+  value: string;
+  subValue?: string;
+  color: string;
+  isSmall?: boolean;
+}
 
 // Memoized Stat Component
-const HeroMetric = memo(({ label, value, subValue, color, isSmall }: any) => (
+const HeroMetric = memo(({ label, value, subValue, color, isSmall }: HeroMetricProps) => (
   <div className="space-y-1">
     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
     <div className="flex items-baseline gap-1">
@@ -36,7 +45,15 @@ const HeroMetric = memo(({ label, value, subValue, color, isSmall }: any) => (
 ));
 HeroMetric.displayName = 'HeroMetric';
 
-const KPICard = memo(({ label, value, unit, icon: Icon, color }: any) => (
+interface KPICardProps {
+  label: string;
+  value: string;
+  unit: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+}
+
+const KPICard = memo(({ label, value, unit, icon: Icon, color }: KPICardProps) => (
   <div className="bg-white rounded-2xl p-6 flex items-center justify-between group transition-all border border-zinc-100 shadow-sm">
      <div className="space-y-1">
         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
@@ -62,7 +79,7 @@ export default function Dashboard() {
     const points = profile?.greenPoints || 0;
     const score = profile?.sustainabilityScore || 0;
     const latestCO2 = records?.[0]?.co2 || 0;
-    const totalSaved = records?.reduce((acc: number, curr: any) => acc + (curr.co2 < 2 ? (2 - curr.co2) : 0), 0) || 0;
+    const totalSaved = records?.reduce((acc: number, curr: CarbonRecord) => acc + (curr.co2 < 2 ? (2 - curr.co2) : 0), 0) || 0;
     
     return {
       points,
