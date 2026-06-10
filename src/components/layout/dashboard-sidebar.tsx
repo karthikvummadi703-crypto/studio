@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -7,7 +8,8 @@ import {
   Calculator, 
   BookOpen, 
   User, 
-  Leaf
+  Leaf,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,18 +20,21 @@ const menuItems = [
   { name: 'PROFILE', href: '/profile', icon: User },
 ];
 
-export function DashboardSidebar() {
+export function DashboardSidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 border-r border-black/5 flex flex-col h-screen sticky top-0 bg-white/80 backdrop-blur-xl z-40">
-      <div className="p-8 flex items-center">
-        <Link href="/dashboard" className="flex items-center gap-3 group">
+    <aside className="w-64 border-r border-black/5 flex flex-col h-screen bg-white/90 backdrop-blur-2xl">
+      <div className="p-8 flex items-center justify-between">
+        <Link href="/dashboard" className="flex items-center gap-3 group" onClick={onClose}>
           <div className="p-2 bg-primary rounded-lg shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
             <Leaf className="h-5 w-5 text-white fill-current" />
           </div>
           <span className="font-headline font-bold text-lg tracking-[0.1em] text-foreground">ECOPULSE AI</span>
         </Link>
+        <button onClick={onClose} className="md:hidden p-2 text-muted-foreground">
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       <nav className="flex-1 px-4 space-y-2 mt-8">
@@ -39,6 +44,7 @@ export function DashboardSidebar() {
             <Link 
               key={item.href} 
               href={item.href}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all text-[11px] font-bold tracking-[0.1em]",
                 isActive 
