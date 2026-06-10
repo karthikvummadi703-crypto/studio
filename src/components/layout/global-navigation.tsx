@@ -33,20 +33,30 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
     return user?.displayName?.[0] || user?.email?.[0] || 'E';
   }, [user]);
 
-  // Hide navigation on auth pages and root redirecting page
+  // Determine if we are on a landing or auth page
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
 
+  // Prevent hydration mismatch by rendering a stable structure initially
   if (!mounted) {
-    return <main className="flex-1">{children}</main>;
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-background">
+        <main className="flex-1">{children}</main>
+      </div>
+    );
   }
 
+  // Auth pages use a simple centered layout without sidebar
   if (isAuthPage) {
-    return <main className="flex-1">{children}</main>;
+    return (
+      <div className="flex flex-col min-h-screen w-full bg-background">
+        <main className="flex-1">{children}</main>
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden w-full">
-      {/* Sidebar Overlay */}
+    <div className="flex h-screen overflow-hidden w-full bg-background">
+      {/* Sidebar Overlay for Mobile */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden transition-opacity" 
@@ -66,6 +76,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
         <DashboardSidebar onClose={closeSidebar} />
       </nav>
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         <header className="h-16 border-b border-black/5 bg-white/60 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm transition-all">
           <div className="flex items-center gap-6">
@@ -95,6 +106,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
             
             <button 
               className="relative p-2 text-muted-foreground hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-full"
+              aria-label="Notifications"
             >
               <Bell className="h-4 w-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border-2 border-white shadow-sm"></span>

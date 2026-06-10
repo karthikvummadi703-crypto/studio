@@ -3,7 +3,7 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import { useUser, useDoc, useCollection, useFirestore } from '@/firebase';
-import { doc, query, collection, orderBy, limit, where } from 'firebase/firestore';
+import { doc, query, collection, limit, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,6 @@ import {
   ArrowRight, 
   CheckCircle2, 
   Calculator, 
-  Activity as ActivityIcon,
   Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -39,7 +38,6 @@ export default function Dashboard() {
 
   const activitiesQuery = useMemo(() => {
     if (!db || !user) return null;
-    // We limit to simple filtering first to avoid indexing errors for new users
     return query(
       collection(db, 'activities'), 
       where('userId', '==', user.uid), 
@@ -82,6 +80,7 @@ export default function Dashboard() {
 
   const hasData = !!(records && records.length > 0);
 
+  // Stable date formatting for hydration
   const formattedDate = useMemo(() => {
     if (!mounted) return "";
     return new Date().toLocaleDateString('en-US', { 
@@ -92,6 +91,7 @@ export default function Dashboard() {
     });
   }, [mounted]);
 
+  // Prevent UI flashing or hydration mismatch
   if (!mounted) return null;
 
   return (
@@ -140,7 +140,7 @@ export default function Dashboard() {
 
           <div className="flex flex-col items-center justify-center space-y-4 p-8 bg-white/40 rounded-[2rem] border border-white/60 backdrop-blur-xl shadow-sm">
              <div className="relative flex items-center justify-center">
-                <svg className="w-40 h-40 transform -rotate-90">
+                <svg className="w-40 h-40 transform -rotate-90" aria-hidden="true">
                   <circle className="text-black/5" strokeWidth="10" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80" />
                   <circle className="text-primary" strokeWidth="10" strokeDasharray="440" strokeDashoffset={440 * (1 - score / 100)} strokeLinecap="round" stroke="currentColor" fill="transparent" r="70" cx="80" cy="80" />
                 </svg>
@@ -158,7 +158,6 @@ export default function Dashboard() {
         <EmptyState />
       ) : (
         <>
-          {/* Active Challenge & Analytics Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <Card className="lg:col-span-2 glass-card border-none rounded-[2rem] overflow-hidden p-8 flex flex-col justify-between">
               {activeChallenge ? (
