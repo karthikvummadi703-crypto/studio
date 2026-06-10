@@ -2,20 +2,20 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import { Sparkles, X, Send, Loader2, Minimize2, Maximize2, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button, Input, Card, CardContent, CardHeader, CardTitle, ScrollArea } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useUser, useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { getLevelFromPoints } from '@/lib/levels';
+import { ChatMessage as IChatMessage, UserProfile } from '@/types';
 
-// Memoized Bubble Component
-const Bubble = memo(({ message, isUser }: { message: any, isUser: boolean }) => (
+/**
+ * Individual chat message bubble component for the floating interface.
+ */
+const Bubble = memo(({ message, isUser }: { message: IChatMessage, isUser: boolean }) => (
   <div className={cn(
-    "flex flex-col max-w-[90%] animate-in fade-in slide-in-from-bottom-2",
+    "flex flex-col max-w-[90%] animate-fade-in",
     isUser ? "ml-auto items-end" : "items-start"
   )}>
     <div className={cn(
@@ -30,6 +30,9 @@ const Bubble = memo(({ message, isUser }: { message: any, isUser: boolean }) => 
 ));
 Bubble.displayName = 'Bubble';
 
+/**
+ * Floating persistent AI assistant for quick sustainability queries.
+ */
 export function FloatingAIAdvisor() {
   const { user } = useUser();
   const db = useFirestore();
@@ -41,10 +44,10 @@ export function FloatingAIAdvisor() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const profileRef = useMemo(() => (user && db ? doc(db, 'users', user.uid) : null), [user, db]);
-  const { data: profile } = useDoc<any>(profileRef);
+  const { data: profile } = useDoc<UserProfile>(profileRef as any);
 
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
-    { role: 'ai', text: 'Hello! I am your Gemini-powered advisor. How can I help you reduce your footprint today?' }
+  const [messages, setMessages] = useState<IChatMessage[]>([
+    { role: 'ai', text: 'Hello! I am your Gemini-powered advisor. How can I help you reduce your footprint today?', timestamp: new Date().toISOString() }
   ]);
 
   useEffect(() => {
@@ -53,21 +56,29 @@ export function FloatingAIAdvisor() {
     }
   }, [messages, streamingText]);
 
+  /**
+   * Sends a user query to the AI and handles the streaming response in the small interface.
+   * @param customMsg Optional message override.
+   */
   const handleSend = useCallback(async (customMsg?: string) => {
     const text = (customMsg || input).trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || !user) return;
     
-    setMessages(prev => [...prev, { role: 'user', text }]);
+    setMessages(prev => [...prev, { role: 'user', text, timestamp: new Date().toISOString() }]);
     setInput('');
     setIsLoading(true);
     setStreamingText('');
 
     try {
       const prunedHistory = messages.slice(-3).map(m => ({ role: m.role, text: m.text }));
+      const idToken = await user.getIdToken();
 
       const response = await fetch('/api/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`
+        },
         body: JSON.stringify({
           history: prunedHistory,
           userInput: text,
@@ -94,14 +105,14 @@ export function FloatingAIAdvisor() {
         setStreamingText(fullResponse);
       }
       
-      setMessages(prev => [...prev, { role: 'ai', text: fullResponse }]);
+      setMessages(prev => [...prev, { role: 'ai', text: fullResponse, timestamp: new Date().toISOString() }]);
     } catch (e) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'Service busy. Please visit Full Advisor page.' }]);
+      setMessages(prev => [...prev, { role: 'ai', text: 'Service busy. Please visit Full Advisor page.', timestamp: new Date().toISOString() }]);
     } finally {
       setIsLoading(false);
       setStreamingText('');
     }
-  }, [input, isLoading, messages, profile]);
+  }, [input, isLoading, messages, profile, user]);
 
   const toggleOpen = useCallback(() => setIsOpen(prev => !prev), []);
   const toggleExpanded = useCallback(() => setIsExpanded(prev => !prev), []);
@@ -128,7 +139,7 @@ export function FloatingAIAdvisor() {
            {['Analyze Impact', 'Open Full AI Advisor'].map(prompt => (
              prompt === 'Open Full AI Advisor' ? (
                 <Link key={prompt} href="/ai-advisor" onClick={() => setIsOpen(false)}>
-                  <Button variant="outline" size="sm" className="h-9 px-4 border-primary text-primary text-[9px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-all rounded-full focus-visible:ring-2 focus-visible:ring-primary">
+                  <Button variant="outline" size="sm" className="h-9 px-4 border-primary text-primary text-[9px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-all rounded-full">
                     {prompt}
                   </Button>
                 </Link>
@@ -137,7 +148,7 @@ export function FloatingAIAdvisor() {
                   key={prompt}
                   variant="outline" 
                   size="sm" 
-                  className="hidden lg:flex h-9 px-4 border-zinc-200 bg-white text-zinc-600 text-[9px] font-bold uppercase tracking-widest hover:border-primary hover:text-primary transition-all rounded-full focus-visible:ring-2 focus-visible:ring-primary"
+                  className="hidden lg:flex h-9 px-4 border-zinc-200 bg-white text-zinc-600 text-[9px] font-bold uppercase tracking-widest hover:border-primary hover:text-primary transition-all rounded-full"
                   onClick={() => {
                     setIsOpen(true);
                     handleSend(prompt);
@@ -169,14 +180,14 @@ export function FloatingAIAdvisor() {
             </div>
             <div className="flex items-center gap-1">
               <Link href="/ai-advisor" onClick={() => setIsOpen(false)}>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary/80 focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open Full Advisor">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-primary" aria-label="Open Full Advisor">
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </Link>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 text-zinc-500 focus-visible:ring-2 focus-visible:ring-primary" 
+                className="h-8 w-8 text-zinc-500" 
                 onClick={toggleExpanded}
                 aria-label={isExpanded ? "Minimize panel" : "Maximize panel"}
               >
@@ -185,7 +196,7 @@ export function FloatingAIAdvisor() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-8 w-8 text-zinc-500 focus-visible:ring-2 focus-visible:ring-primary" 
+                className="h-8 w-8 text-zinc-500" 
                 onClick={() => setIsOpen(false)}
                 aria-label="Close panel"
               >
@@ -200,7 +211,7 @@ export function FloatingAIAdvisor() {
                   <Bubble key={i} message={m} isUser={m.role === 'user'} />
                 ))}
                 {streamingText && (
-                  <div className="flex flex-col max-w-[90%] items-start animate-in fade-in">
+                  <div className="flex flex-col max-w-[90%] items-start animate-fade-in">
                     <div className="p-4 rounded-[1.5rem] rounded-tl-none text-xs leading-relaxed shadow-sm bg-zinc-50 border border-zinc-200 text-zinc-800">
                       {streamingText}
                     </div>
@@ -219,14 +230,14 @@ export function FloatingAIAdvisor() {
               <Input 
                 placeholder="Ask Gemini..." 
                 aria-label="Type your sustainability question"
-                className="bg-zinc-50 border-zinc-200 text-xs h-12 rounded-xl focus-visible:ring-primary"
+                className="bg-zinc-50 border-zinc-200 text-xs h-12 rounded-xl"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               />
               <Button 
                 size="icon" 
-                className="h-12 w-12 bg-primary shadow-lg shadow-primary/30 hover:scale-105 transition-transform focus-visible:ring-2 focus-visible:ring-primary outline-none" 
+                className="h-12 w-12 bg-primary shadow-lg hover:scale-105 transition-transform" 
                 onClick={() => handleSend()} 
                 disabled={isLoading}
                 aria-label="Send message"

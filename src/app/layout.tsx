@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
-import { Toaster } from '@/components/ui/toaster';
-import { GlobalNavigation } from '@/components/layout/global-navigation';
+import { Toaster } from '@/components/ui';
+import { GlobalNavigation } from '@/components/layout';
 import { Space_Grotesk, Inter } from 'next/font/google';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const spaceGrotesk = Space_Grotesk({ 
   subsets: ['latin'], 
@@ -53,9 +54,13 @@ export default function RootLayout({
           Skip to main content
         </a>
         <FirebaseClientProvider>
-          <GlobalNavigation>
-            {children}
-          </GlobalNavigation>
+          <ErrorBoundary>
+            <GlobalNavigation>
+              <div id="main-content">
+                {children}
+              </div>
+            </GlobalNavigation>
+          </ErrorBoundary>
           <Toaster />
         </FirebaseClientProvider>
       </body>
