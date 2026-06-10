@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Leaf, Zap, Globe, ArrowRight } from 'lucide-react';
@@ -11,11 +12,11 @@ export default function LandingPage() {
           <span className="font-headline font-bold text-xl tracking-tighter">EcoPulse AI</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link className="text-sm font-medium hover:text-primary transition-colors" href="/login">
-            Sign In
-          </Link>
+          <Button asChild variant="ghost" className="text-sm font-medium hover:text-primary transition-colors">
+             <Link href="/dashboard">View Demo</Link>
+          </Button>
           <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Link href="/register">Get Started</Link>
+            <Link href="/dashboard">Get Started</Link>
           </Button>
         </nav>
       </header>
@@ -33,10 +34,10 @@ export default function LandingPage() {
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" className="h-12 px-8 bg-primary text-primary-foreground">
-                  <Link href="/register">Start Your Journey <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  <Link href="/dashboard">Start Your Journey <ArrowRight className="ml-2 h-4 w-4" /></Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-12 px-8 border-primary/20 hover:bg-primary/5">
-                  <Link href="/login">Explore Dashboard</Link>
+                  <Link href="/dashboard">Explore Dashboard</Link>
                 </Button>
               </div>
             </div>
