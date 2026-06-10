@@ -33,7 +33,7 @@ export const useCollection = <T = DocumentData>(query: Query<T> | null) => {
           ...doc.data(),
           id: doc.id,
         }));
-        setData(items);
+        setData(items as any);
         setIsLoading(false);
       },
       (err) => {

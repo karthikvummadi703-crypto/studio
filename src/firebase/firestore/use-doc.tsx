@@ -29,7 +29,7 @@ export const useDoc = <T = DocumentData>(docRef: DocumentReference<T> | null) =>
     const unsubscribe = onSnapshot(
       stableRef,
       (snapshot: DocumentSnapshot<T>) => {
-        setData(snapshot.exists() ? { ...snapshot.data(), id: snapshot.id } : null);
+        setData(snapshot.exists() ? { ...snapshot.data(), id: snapshot.id } as any : null);
         setIsLoading(false);
       },
       (err) => {
