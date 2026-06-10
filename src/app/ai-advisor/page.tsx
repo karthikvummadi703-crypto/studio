@@ -66,9 +66,13 @@ export default function AIAdvisorPage() {
     const text = (customMsg || input).trim();
     if (!text || !user || !db || loading) return;
 
+    const startTime = performance.now();
+    console.log(`[AI Advisor] Request started at: ${new Date().toISOString()}`);
+
     setLoading(true);
     setInput('');
 
+    // Optimistic UI update: local message display
     const userMessage = { role: 'user', text, timestamp: new Date().toISOString() };
     const currentMessages = [...messages, userMessage];
 
@@ -92,9 +96,15 @@ export default function AIAdvisorPage() {
         });
       }
 
-      // 2. AI Execution
+      // 2. AI Execution - Use pruned history (last 5 messages)
+      const historyForAI = currentMessages.slice(-5).map(m => ({
+        role: m.role as 'user' | 'ai',
+        text: m.text
+      }));
+
+      const responseStartTime = performance.now();
       const result = await aiAdvisorChat({
-        history: currentMessages.map(m => ({ role: m.role as 'user' | 'ai', text: m.text })),
+        history: historyForAI,
         userInput: text,
         userContext: {
           points: profile?.greenPoints || 0,
@@ -103,6 +113,9 @@ export default function AIAdvisorPage() {
           challengesCompleted: profile?.completedChallenges?.length || 0,
         }
       });
+      const responseEndTime = performance.now();
+      
+      console.log(`[AI Advisor] Token generation took: ${(responseEndTime - responseStartTime).toFixed(0)}ms`);
 
       const aiMessage = { role: 'ai', text: result.responseText, timestamp: new Date().toISOString() };
       
@@ -113,6 +126,9 @@ export default function AIAdvisorPage() {
         updatedAt: serverTimestamp(),
       });
       
+      const totalLatency = performance.now() - startTime;
+      console.log(`[AI Advisor] Total Latency: ${totalLatency.toFixed(0)}ms`);
+
     } catch (e) {
       console.error('Advisor speed error:', e);
     } finally {

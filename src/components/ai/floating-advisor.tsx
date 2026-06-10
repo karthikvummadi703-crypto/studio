@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Sparkles, X, Send, Loader2, Minimize2, Maximize2, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,13 +33,19 @@ export function FloatingAIAdvisor() {
     const text = (customMsg || input).trim();
     if (!text || isLoading) return;
     
+    const startTime = performance.now();
+    console.log(`[Quick AI] Request started at: ${new Date().toISOString()}`);
+
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setIsLoading(true);
 
     try {
+      // Use pruned history for speed
+      const prunedHistory = messages.slice(-5).map(m => ({ role: m.role, text: m.text }));
+
       const result = await aiAdvisorChat({
-        history: messages.map(m => ({ role: m.role, text: m.text })),
+        history: prunedHistory,
         userInput: text,
         userContext: {
           points: profile?.greenPoints || 0,
@@ -48,7 +54,9 @@ export function FloatingAIAdvisor() {
           challengesCompleted: profile?.completedChallenges?.length || 0,
         }
       });
+      
       setMessages(prev => [...prev, { role: 'ai', text: result.responseText }]);
+      console.log(`[Quick AI] Latency: ${(performance.now() - startTime).toFixed(0)}ms`);
     } catch (e) {
       setMessages(prev => [...prev, { role: 'ai', text: 'I encountered a brief latency issue. Please try again.' }]);
     } finally {
@@ -161,5 +169,3 @@ export function FloatingAIAdvisor() {
     </>
   );
 }
-
-import { useMemo } from 'react';
