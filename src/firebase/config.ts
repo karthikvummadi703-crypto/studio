@@ -1,8 +1,11 @@
-
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
+/**
+ * Hardened Firebase Production Configuration
+ * Synchronized with Studio Project 9772282798
+ */
 const firebaseConfig = {
   apiKey: "AIzaSyCiAHwWhFFF7RyOByxe4PsYxOSy8jgKZAo",
   authDomain: "studio-9772282798-f7257.firebaseapp.com",

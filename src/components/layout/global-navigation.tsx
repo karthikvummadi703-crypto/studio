@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
@@ -44,13 +43,13 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
     return user?.displayName?.[0] || user?.email?.[0] || 'E';
   }, [user]);
 
-  // STABLE SHELL: The structure and class names MUST be identical on server/client initial render.
-  // We use the same wrapper classes regardless of showNav to prevent hydration mismatch.
+  // STABLE SHELL: We ensure the outer div structure is identical on Server and Client.
+  // We use bg-transparent to allow the layout background image to show through.
   const showNav = mounted && !isAuthPage && user;
 
   return (
-    <div className="flex h-screen overflow-hidden w-full bg-background">
-      {/* Sidebar - Conditionally rendered content, but the parent structure remains stable */}
+    <div className="flex h-screen overflow-hidden w-full bg-transparent">
+      {/* Sidebar - Positioned fixed/relative but in a stable container */}
       {showNav && (
         <nav 
           className={cn(
@@ -65,7 +64,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
       {/* Main Content Area - Stable container with fixed classes */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {showNav && (
-          <header className="h-16 border-b border-black/5 bg-white/40 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm transition-all">
+          <header className="h-16 border-b border-black/5 bg-white/20 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm transition-all">
             <div className="flex items-center gap-6">
               <button 
                 onClick={toggleSidebar}
@@ -102,10 +101,10 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
           </header>
         )}
         
-        <main className="flex-1 overflow-y-auto custom-scrollbar relative">
+        <main className="flex-1 overflow-y-auto custom-scrollbar relative bg-transparent">
           <div className={cn(
-            "max-w-7xl mx-auto p-4 sm:p-8 pb-24",
-            mounted && !isAuthPage && "bg-white/10 backdrop-blur-[2px] min-h-full"
+            "max-w-7xl mx-auto p-4 sm:p-8 pb-24 relative z-10",
+            showNav && "bg-white/5 backdrop-blur-[1px] min-h-full"
           )}>
             {children}
           </div>
@@ -116,7 +115,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
       {/* Overlay */}
       {showNav && isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-40 md:hidden" 
+          className="fixed inset-0 bg-black/10 backdrop-blur-[1px] z-40 md:hidden" 
           onClick={closeSidebar}
         />
       )}
