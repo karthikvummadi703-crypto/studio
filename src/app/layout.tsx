@@ -35,7 +35,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body text-foreground min-h-screen relative overflow-x-hidden selection:bg-primary/30 bg-background">
-        {/* Fixed High-Fidelity Background Layer */}
+        {/* Fixed High-Fidelity Background Layer - Restored */}
         <div 
           className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center brightness-110 saturate-[1.1] opacity-60" 
           style={{ backgroundImage: "url('https://picsum.photos/seed/ecopulse-vibrant-bloom/1920/1080')" }}
