@@ -1,10 +1,6 @@
 'use server';
 /**
  * @fileOverview A Genkit flow for generating a personalized carbon reduction plan.
- *
- * - generateReductionPlan - A function that handles the carbon reduction plan generation process.
- * - GenerateReductionPlanInput - The input type for the generateReductionPlan function.
- * - GenerateReductionPlanOutput - The return type for the generateReductionPlan function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -81,12 +77,9 @@ export type GenerateReductionPlanOutput = z.infer<
   typeof GenerateReductionPlanOutputSchema
 >;
 
-export async function generateReductionPlan(
-  input: GenerateReductionPlanInput
-): Promise<GenerateReductionPlanOutput> {
-  return generateReductionPlanFlow(input);
-}
-
+/**
+ * Prompt for carbon reduction plan generation.
+ */
 const reductionPlanPrompt = ai.definePrompt({
   name: 'reductionPlanPrompt',
   input: { schema: GenerateReductionPlanInputSchema },
@@ -103,6 +96,9 @@ Each recommendation must include an action, its estimated impact level (Low, Med
 Prioritize recommendations that address the highest emission categories and are practical for an individual to implement.`,
 });
 
+/**
+ * Genkit flow for generating a reduction plan.
+ */
 const generateReductionPlanFlow = ai.defineFlow(
   {
     name: 'generateReductionPlanFlow',
@@ -111,6 +107,20 @@ const generateReductionPlanFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await reductionPlanPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('Reduction plan generation failed: Empty output');
+    }
+    return output;
   }
 );
+
+/**
+ * Generates a personalized carbon reduction plan using AI.
+ * @param input User emissions breakdown.
+ * @returns Detailed AI generated reduction strategy.
+ */
+export async function generateReductionPlan(
+  input: GenerateReductionPlanInput
+): Promise<GenerateReductionPlanOutput> {
+  return generateReductionPlanFlow(input);
+}

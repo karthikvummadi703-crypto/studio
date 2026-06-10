@@ -3,8 +3,6 @@
  * @fileOverview A Genkit flow for generating personalized carbon footprint analysis.
  *
  * - generateCarbonAnalysis - A function that analyzes user carbon footprint data.
- * - GenerateCarbonAnalysisInput - The input type for the generateCarbonAnalysis function.
- * - GenerateCarbonAnalysisOutput - The return type for the generateCarbonAnalysis function.
  */
 
 import { ai } from '@/ai/genkit';
@@ -29,10 +27,9 @@ const GenerateCarbonAnalysisOutputSchema = z.object({
 });
 export type GenerateCarbonAnalysisOutput = z.infer<typeof GenerateCarbonAnalysisOutputSchema>;
 
-export async function generateCarbonAnalysis(input: GenerateCarbonAnalysisInput): Promise<GenerateCarbonAnalysisOutput> {
-  return generateCarbonAnalysisFlow(input);
-}
-
+/**
+ * Prompt definition for carbon analysis.
+ */
 const prompt = ai.definePrompt({
   name: 'carbonAnalysisPrompt',
   input: { schema: GenerateCarbonAnalysisInputSchema },
@@ -52,6 +49,9 @@ Provide a personalized explanation of their current emissions, highlighting thei
 `,
 });
 
+/**
+ * Genkit flow to generate carbon analysis.
+ */
 const generateCarbonAnalysisFlow = ai.defineFlow(
   {
     name: 'generateCarbonAnalysisFlow',
@@ -60,6 +60,18 @@ const generateCarbonAnalysisFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('Analysis generation failed: Empty output from prompt');
+    }
+    return output;
   }
 );
+
+/**
+ * Analyzes user carbon footprint data using AI.
+ * @param input User emissions data.
+ * @returns AI generated analysis and breakdown.
+ */
+export async function generateCarbonAnalysis(input: GenerateCarbonAnalysisInput): Promise<GenerateCarbonAnalysisOutput> {
+  return generateCarbonAnalysisFlow(input);
+}

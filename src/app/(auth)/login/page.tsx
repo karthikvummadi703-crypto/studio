@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -18,7 +17,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Loader2, Leaf, Sparkles, Mail, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
+import { COLLECTIONS, APP_METADATA } from '@/lib/constants';
 
+/**
+ * Login Page component for handling user authentication.
+ */
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -28,47 +32,45 @@ export default function LoginPage() {
   const [demoLoading, setDemoLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  /**
+   * Handles traditional email/password login.
+   */
+  const handleLogin = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     if (!email || !password) return;
     
-    console.log('[Login] Audit Started: Attempting sign-in for:', email);
+    logger.log('[Login] Attempting sign-in for:', email);
     setLoading(true);
 
     try {
-      console.log('[Login] Step 1: Calling signInWithEmailAndPassword...');
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      console.log('[Login] Step 1 Success: Auth success. UID:', cred.user.uid);
-      
-      console.log('[Login] Step 2: Initiating redirect to dashboard...');
+      await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('[Login] CRITICAL ERROR:', error);
+      logger.error('[Login] Error:', error);
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: error.message || "Invalid credentials. Please try again.",
       });
     } finally {
-      console.log('[Login] Audit Ended: Loading state false.');
       setLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
-    console.log('[Login] Step 1: Starting Google Sign-In...');
+  /**
+   * Handles Google OAuth login.
+   */
+  const handleGoogleLogin = async (): Promise<void> => {
     setGoogleLoading(true);
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      console.log('[Login] Step 1 Success: Google Auth UID:', user.uid);
 
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, COLLECTIONS.USERS, user.uid);
       const userDoc = await getDoc(userRef);
 
       if (!userDoc.exists()) {
-        console.log('[Login] Step 2: Initializing new Google profile...');
         await setDoc(userRef, {
           fullName: user.displayName || 'Eco Warrior',
           email: user.email || '',
@@ -78,13 +80,11 @@ export default function LoginPage() {
           createdAt: new Date().toISOString(),
           completedChallenges: []
         });
-        console.log('[Login] Step 2 Success: Profile created.');
       }
       
-      console.log('[Login] Step 3: Redirecting...');
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('[Login] Google Error:', error);
+      logger.error('[Login] Google Error:', error);
       toast({
         variant: "destructive",
         title: "Google Login Failed",
@@ -95,19 +95,19 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoMode = async () => {
-    console.log('[Login] Step 1: Starting Demo Mode (Anonymous)...');
+  /**
+   * Handles Anonymous Demo Mode access.
+   */
+  const handleDemoMode = async (): Promise<void> => {
     setDemoLoading(true);
     try {
       const cred = await signInAnonymously(auth);
       const user = cred.user;
-      console.log('[Login] Step 1 Success: UID:', user.uid);
 
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, COLLECTIONS.USERS, user.uid);
       const userDoc = await getDoc(userRef);
 
       if (!userDoc.exists()) {
-        console.log('[Login] Step 2: Seeding demo profile data...');
         await setDoc(userRef, {
           fullName: 'Eco Explorer (Demo)',
           email: 'demo@ecopulse.ai',
@@ -118,24 +118,22 @@ export default function LoginPage() {
           completedChallenges: ['challenge-1']
         });
 
-        await addDoc(collection(db, 'activities'), {
+        await addDoc(collection(db, COLLECTIONS.ACTIVITIES), {
           userId: user.uid,
           type: 'milestone',
           description: 'Joined the EcoPulse network',
           pointsEarned: 50,
           timestamp: new Date().toISOString()
         });
-        console.log('[Login] Step 2 Success: Demo data seeded.');
       }
 
       toast({
         title: "Demo Mode Active",
         description: "Explore EcoPulse with pre-populated telemetry.",
       });
-      console.log('[Login] Step 3: Redirecting...');
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('[Login] Demo Error:', error);
+      logger.error('[Login] Demo Error:', error);
       toast({
         variant: "destructive",
         title: "Demo Access Failed",
@@ -154,8 +152,8 @@ export default function LoginPage() {
             <Leaf className="h-8 w-8 text-primary" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-3xl font-headline font-bold tracking-tight">EcoPulse AI</CardTitle>
-            <CardDescription className="text-sm uppercase font-bold tracking-widest text-zinc-400">Environmental Strategy Node</CardDescription>
+            <CardTitle className="text-3xl font-headline font-bold tracking-tight">{APP_METADATA.NAME}</CardTitle>
+            <CardDescription className="text-sm uppercase font-bold tracking-widest text-zinc-400">{APP_METADATA.TAGLINE}</CardDescription>
           </div>
         </CardHeader>
 

@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview A hyper-optimized Genkit flow for the EcoPulse AI Advisor.
@@ -25,18 +24,24 @@ export const AIAdvisorChatInputSchema = z.object({
   }).describe('User sustainability stats.'),
 });
 
+export type AIAdvisorChatInput = z.infer<typeof AIAdvisorChatInputSchema>;
+
 export const AIAdvisorChatOutputSchema = z.object({
   responseText: z.string().describe('Short, actionable response.'),
   suggestedTitle: z.string().optional().describe('3-5 word title.'),
 });
 
-// Prompt definition for both streaming and non-streaming use
+export type AIAdvisorChatOutput = z.infer<typeof AIAdvisorChatOutputSchema>;
+
+/**
+ * Prompt definition for conversational AI advisor.
+ */
 export const advisorPrompt = ai.definePrompt({
   name: 'aiAdvisorChatPrompt',
   input: { schema: AIAdvisorChatInputSchema },
   output: { schema: AIAdvisorChatOutputSchema },
   config: {
-    temperature: 0.3, // Lower temperature for maximum speed and precision
+    temperature: 0.3,
     maxOutputTokens: 400,
   },
   prompt: `You are EcoPulse AI, a high-speed sustainability expert. 
@@ -57,7 +62,17 @@ User: {{{userInput}}}
 Instruction: Provide a concise, 2-sentence actionable tip. Be specific to their stats. If this is the start of a conversation, provide a suggestedTitle for the chat.`,
 });
 
-export async function aiAdvisorChat(input: z.infer<typeof AIAdvisorChatInputSchema>): Promise<z.infer<typeof AIAdvisorChatOutputSchema>> {
+/**
+ * Executes the AI Advisor chat flow.
+ * @param input Chat history and user context.
+ * @returns Actionable response and optional chat title.
+ */
+export async function aiAdvisorChat(input: AIAdvisorChatInput): Promise<AIAdvisorChatOutput> {
   const { output } = await advisorPrompt(input);
-  return output!;
+  if (!output) {
+    return {
+      responseText: "I'm sorry, I couldn't generate a response at this time. Please try again.",
+    };
+  }
+  return output;
 }
