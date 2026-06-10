@@ -35,18 +35,18 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body bg-background text-foreground min-h-screen relative overflow-x-hidden selection:bg-primary/30">
-        {/* Static Background Layer */}
+      <body className="font-body text-foreground min-h-screen relative overflow-x-hidden selection:bg-primary/30">
+        {/* Global Background Layer - Restored */}
         <div 
-          className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center brightness-150 saturate-[1.2]" 
+          className="fixed inset-0 z-0 pointer-events-none bg-cover bg-center brightness-110 saturate-[1.1] transition-opacity duration-1000" 
           style={{ backgroundImage: "url('https://picsum.photos/seed/ecopulse-vibrant-bloom/1920/1080')" }}
           data-ai-hint="vibrant lush valley flowers"
           aria-hidden="true"
         />
-        <div className="fixed inset-0 z-0 bg-white/10 pointer-events-none" aria-hidden="true" />
+        <div className="fixed inset-0 z-0 bg-white/40 backdrop-blur-[2px] pointer-events-none" aria-hidden="true" />
         
         {/* App Root Container */}
-        <div className="relative z-10 flex flex-col min-h-screen">
+        <div className="relative z-10">
           <FirebaseClientProvider>
             <GlobalNavigation>
               {children}

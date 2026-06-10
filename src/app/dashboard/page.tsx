@@ -62,13 +62,11 @@ export default function Dashboard() {
   const points = profile?.greenPoints || 0;
   const score = profile?.sustainabilityScore || 0;
   const level = getLevelFromPoints(points);
-  const challengesCompletedCount = profile?.completedChallenges?.length || 0;
   
   // KPI Calculations
   const latestCO2 = records?.[0]?.co2 || 0;
   const totalSaved = useMemo(() => {
     if (!records) return 0;
-    // Mock logic: assume any activity with co2 < 2kg is a "save" relative to car baseline
     return records.reduce((acc: number, curr: any) => acc + (curr.co2 < 2 ? (2 - curr.co2) : 0), 0);
   }, [records]);
 
@@ -91,7 +89,14 @@ export default function Dashboard() {
     });
   }, [mounted]);
 
-  if (!mounted) return null;
+  if (!mounted) return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex flex-col items-center gap-4">
+        <Leaf className="h-10 w-10 text-primary/20 animate-pulse" />
+        <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest">Waking Telemetry Node...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000">
@@ -116,7 +121,7 @@ export default function Dashboard() {
       </section>
 
       {/* Sustainability Hero Section */}
-      <section className="glass-card rounded-[2.5rem] p-12 relative overflow-hidden border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+      <section className="glass-card rounded-[2.5rem] p-12 relative overflow-hidden border-white/40 shadow-xl">
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
           <div className="space-y-8 lg:col-span-2">
             <div className="flex items-center gap-4">
@@ -133,7 +138,7 @@ export default function Dashboard() {
               <HeroMetric label="Score" value={score.toFixed(0)} color="text-primary" />
               <HeroMetric label="Green Points" value={points.toString()} color="text-emerald-600" />
               <HeroMetric label="Current Level" value={level} color="text-foreground" isSmall />
-              <HeroMetric label="Latest Impact" value={latestCO2.toFixed(1)} subValue="KG" color="text-emerald-500" />
+              <HeroMetric label="Latest Impact" value={latestCO2.toFixed(1)} subValue="KG" color="text-emerald-50" />
             </div>
           </div>
 

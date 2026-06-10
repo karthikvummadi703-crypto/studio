@@ -1,5 +1,5 @@
 
-"use client";
+'use client';
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { DashboardSidebar } from './dashboard-sidebar';
@@ -22,7 +22,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
   }, []);
 
   const toggleSidebar = useCallback(() => {
-    setIsSidebarOpen(prev => !prev);
+    setIsSidebarOpen((prev) => !prev);
   }, []);
 
   const closeSidebar = useCallback(() => {
@@ -35,10 +35,11 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
 
-  // Use a stable structural shell to prevent hydration mismatch
-  // The root element must remain consistent during initial hydration
+  // Fixed structural shell to prevent hydration mismatch.
+  // The outer div and main tags are always rendered to keep the DOM tree stable.
   return (
-    <div className="flex h-screen overflow-hidden w-full bg-background">
+    <div className="flex h-screen overflow-hidden w-full bg-transparent">
+      {/* Sidebar - Deferred until mounted and check auth page */}
       {!isAuthPage && mounted && (
         <>
           {isSidebarOpen && (
@@ -61,9 +62,11 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
         </>
       )}
 
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Header - Deferred until mounted and check auth page */}
         {!isAuthPage && mounted && (
-          <header className="h-16 border-b border-black/5 bg-white/60 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm transition-all">
+          <header className="h-16 border-b border-black/5 bg-white/40 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm transition-all">
             <div className="flex items-center gap-6">
               <button 
                 onClick={toggleSidebar}
@@ -112,10 +115,12 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
           </header>
         )}
         
+        {/* Content Region - Structurally consistent shell */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative focus:outline-none" tabIndex={-1}>
           <div className="max-w-7xl mx-auto pb-24">
             {children}
           </div>
+          {/* Floating Advisor - Deferred */}
           {!isAuthPage && mounted && <FloatingAIAdvisor />}
         </main>
       </div>
