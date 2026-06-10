@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -29,7 +28,7 @@ export function FloatingAIAdvisor() {
     setTimeout(() => {
       setMessages(prev => [...prev, { 
         role: 'ai', 
-        text: "I've analyzed your request against current ecological standards. Your next best action is to complete an Impact Audit to provide the telemetry data needed for a full analysis." 
+        text: "Based on environmental telemetry, I recommend completing an Impact Audit first. This will allow me to generate precise carbon reduction strategies for your profile." 
       }]);
       setIsLoading(false);
     }, 1500);
@@ -38,24 +37,24 @@ export function FloatingAIAdvisor() {
   return (
     <>
       {/* Floating Bottom Bar (Trigger) */}
-      <div className="fixed bottom-0 left-64 right-0 h-16 bg-black/40 backdrop-blur-xl border-t border-white/5 flex items-center justify-between px-10 z-40">
+      <div className="fixed bottom-0 left-64 right-0 h-16 bg-white/80 backdrop-blur-xl border-t border-black/5 flex items-center justify-between px-10 z-40">
         <div className="flex items-center gap-4 group cursor-pointer" onClick={() => setIsOpen(true)}>
-           <div className="p-2 bg-primary/20 rounded-lg group-hover:bg-primary/40 transition-colors">
+           <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
               <Sparkles className="h-5 w-5 text-primary" />
            </div>
            <div>
               <p className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase">EcoPulse AI Advisor</p>
-              <p className="text-[11px] font-bold text-white/60">How can I help you reduce your footprint today?</p>
+              <p className="text-[11px] font-bold text-muted-foreground">Ready to analyze your footprint. Ask me anything.</p>
            </div>
         </div>
 
         <div className="flex gap-4">
-           {['Analyze My Footprint', 'Reduce Emissions', 'Next Action'].map(prompt => (
+           {['Analyze Impact', 'Reduce Emissions', 'Next Action'].map(prompt => (
               <Button 
                 key={prompt}
                 variant="outline" 
                 size="sm" 
-                className="hidden lg:flex h-9 px-4 border-white/5 bg-white/5 text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-all rounded-full"
+                className="hidden lg:flex h-9 px-4 border-primary/20 bg-primary/5 text-primary text-[9px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all rounded-full"
                 onClick={() => {
                   setIsOpen(true);
                   handleSend(prompt);
@@ -77,12 +76,12 @@ export function FloatingAIAdvisor() {
           "shadow-2xl border-primary/20 glass-card flex flex-col transition-all duration-300 rounded-[2rem] overflow-hidden",
           isExpanded ? "h-[700px]" : "h-[500px]"
         )}>
-          <CardHeader className="flex flex-row items-center justify-between py-5 px-6 border-b border-white/5 bg-primary/5">
+          <CardHeader className="flex flex-row items-center justify-between py-5 px-6 border-b border-black/5 bg-primary/5">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-xl">
-                <Sparkles className="h-4 w-4 text-primary-foreground" />
+              <div className="p-2 bg-primary rounded-xl shadow-md">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <CardTitle className="text-sm font-headline font-bold uppercase tracking-widest">AI Advisor</CardTitle>
+              <CardTitle className="text-sm font-headline font-bold uppercase tracking-widest text-primary">AI Advisor</CardTitle>
             </div>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => setIsExpanded(!isExpanded)}>
@@ -93,7 +92,7 @@ export function FloatingAIAdvisor() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-0 flex-1 flex flex-col overflow-hidden">
+          <CardContent className="p-0 flex-1 flex flex-col overflow-hidden bg-white/50">
             <ScrollArea className="flex-1 p-6">
               <div className="space-y-6">
                 {messages.map((m, i) => (
@@ -102,10 +101,10 @@ export function FloatingAIAdvisor() {
                     m.role === 'user' ? "ml-auto items-end" : "items-start"
                   )}>
                     <div className={cn(
-                      "p-4 rounded-[1.5rem] text-xs leading-relaxed shadow-lg",
+                      "p-4 rounded-[1.5rem] text-xs leading-relaxed shadow-sm",
                       m.role === 'user' 
-                        ? "bg-primary text-primary-foreground rounded-tr-none font-medium" 
-                        : "bg-white/5 border border-white/10 rounded-tl-none text-white/80"
+                        ? "bg-primary text-white rounded-tr-none font-medium" 
+                        : "bg-white border border-black/5 rounded-tl-none text-foreground"
                     )}>
                       {m.text}
                     </div>
@@ -114,21 +113,21 @@ export function FloatingAIAdvisor() {
                 {isLoading && (
                   <div className="flex items-center gap-3 text-[10px] text-primary uppercase font-bold tracking-widest animate-pulse px-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Synthesizing planetary data...
+                    Connecting to Eco-Engine...
                   </div>
                 )}
               </div>
             </ScrollArea>
-            <div className="p-5 border-t border-white/5 bg-black/40 flex gap-3">
+            <div className="p-5 border-t border-black/5 bg-white/80 flex gap-3">
               <Input 
-                placeholder="Ask your advisor anything..." 
-                className="bg-white/5 border-white/10 text-xs h-12 rounded-xl focus-visible:ring-primary/30"
+                placeholder="Type your question..." 
+                className="bg-black/5 border-transparent text-xs h-12 rounded-xl focus-visible:ring-primary/20"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
               />
-              <Button size="icon" className="h-12 w-12 bg-primary hover:scale-105 transition-transform" onClick={() => handleSend()} disabled={isLoading}>
-                <Send className="h-5 w-5 text-primary-foreground" />
+              <Button size="icon" className="h-12 w-12 bg-primary shadow-lg shadow-primary/30 hover:scale-105 transition-transform" onClick={() => handleSend()} disabled={isLoading}>
+                <Send className="h-5 w-5 text-white" />
               </Button>
             </div>
           </CardContent>
