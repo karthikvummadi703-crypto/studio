@@ -20,7 +20,7 @@ import {
   Clock
 } from 'lucide-react';
 import { useUser, useCollection, useFirestore } from '@/firebase';
-import { collection, query, orderBy, limit } from 'firebase/firestore';
+import { collection, query, orderBy, limit, where } from 'firebase/firestore';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -68,7 +68,12 @@ export default function KnowledgeHubPage() {
 
   const recordsQuery = useMemo(() => {
     if (!db || !user) return null;
-    return query(collection(db, 'calculator_records'), orderBy('timestamp', 'desc'), limit(1));
+    return query(
+      collection(db, 'calculator_records'), 
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc'), 
+      limit(1)
+    );
   }, [db, user]);
 
   const { data: latestRecords } = useCollection(recordsQuery);
@@ -152,23 +157,30 @@ export default function KnowledgeHubPage() {
                 </CardHeader>
                 <CardContent className="p-8 space-y-8">
                   <div className="text-center py-6 bg-zinc-50 rounded-2xl border border-zinc-100">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Current Footprint</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Latest Journey Emission</p>
                     <div className="flex items-baseline justify-center gap-2">
-                      <span className="text-5xl font-headline font-bold text-foreground">{latestRecord.totalEmissions.toFixed(1)}</span>
+                      <span className="text-5xl font-headline font-bold text-foreground">{latestRecord.co?.toFixed(1) || latestRecord.totalEmissions?.toFixed(1) || 0}</span>
                       <span className="text-sm font-bold text-zinc-400 uppercase">kgCO2e</span>
                     </div>
+                    <p className="text-[10px] font-bold text-zinc-500 mt-2">
+                      {latestRecord.start} to {latestRecord.destination}
+                    </p>
                   </div>
                   
                   <div className="space-y-6">
-                    {Object.entries(latestRecord.breakdown).map(([key, val]: [string, any]) => (
-                      <div key={key} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-xs font-bold uppercase tracking-widest text-zinc-500 capitalize">{key.replace('home', 'Home ')}</span>
-                          <span className="text-xs font-bold text-primary">{((val / latestRecord.totalEmissions) * 100).toFixed(0)}%</span>
-                        </div>
-                        <Progress value={(val / latestRecord.totalEmissions) * 100} className="h-1.5 bg-zinc-100" />
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Journey Distance</span>
+                        <span className="text-xs font-bold text-primary">{latestRecord.distance} km</span>
                       </div>
-                    ))}
+                      <Progress value={Math.min(100, (latestRecord.distance / 100) * 100)} className="h-1.5 bg-zinc-100" />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Impact Rating</span>
+                        <Badge variant="outline" className="text-[9px] font-black uppercase">{latestRecord.impact} Impact</Badge>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -182,19 +194,19 @@ export default function KnowledgeHubPage() {
                       <h4 className="text-[10px] font-black uppercase tracking-widest text-primary">Strategic Insight</h4>
                     </div>
                     <p className="text-lg font-headline font-bold leading-relaxed text-zinc-100">
-                      {latestRecord.breakdown.transportation > latestRecord.breakdown.homeEnergy ? 
-                        `Your transportation footprint is ${((latestRecord.breakdown.transportation / latestRecord.totalEmissions) * 100).toFixed(0)}% of your total impact. Switching to public transit just twice a week could save 18% of your annual emissions.` :
-                        `Home energy is your primary driver at ${((latestRecord.breakdown.homeEnergy / latestRecord.totalEmissions) * 100).toFixed(0)}%. Optimizing heating schedules could reduce your footprint by up to 300kg annually.`
+                      {latestRecord.mode === 'car' || latestRecord.mode === 'motorcycle' ? 
+                        `Your last trip via ${latestRecord.mode} produced significant emissions. Switching to the metro for this specific route could have saved approximately 82% of that carbon impact.` :
+                        `Using ${latestRecord.mode} was an excellent choice. You've avoided approximately 4.5kg of CO2 compared to a standard petrol vehicle for this specific distance.`
                       }
                     </p>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 rounded-xl bg-white/10 border border-white/5 space-y-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-primary">Top Action</p>
-                        <p className="text-sm font-bold">Renewable Transition</p>
+                        <p className="text-sm font-bold">Public Transit Mode</p>
                       </div>
                       <div className="p-4 rounded-xl bg-white/10 border border-white/5 space-y-1">
                         <p className="text-[9px] font-black uppercase tracking-widest text-primary">Efficiency</p>
-                        <p className="text-sm font-bold">Smart Home Audit</p>
+                        <p className="text-sm font-bold">Route Optimization</p>
                       </div>
                     </div>
                   </div>
@@ -209,7 +221,7 @@ export default function KnowledgeHubPage() {
                     <div className="space-y-1">
                       <h4 className="text-sm font-bold text-foreground">Projection Analysis</h4>
                       <p className="text-xs text-zinc-500 leading-relaxed">
-                        Based on your current habits, implementing the suggested efficiency audits will improve your Sustainability Score by approximately <span className="text-emerald-600 font-bold">12 points</span> by next month.
+                        Based on your current habits, choosing public transport for just 2 more trips this week will improve your Sustainability Score by approximately <span className="text-emerald-600 font-bold">15 points</span>.
                       </p>
                     </div>
                   </div>
