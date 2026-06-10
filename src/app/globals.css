@@ -5,7 +5,7 @@
 
 @layer base {
   :root {
-    /* Bright Vibrant Green Theme */
+    /* Premium High-Contrast Eco Theme */
     --background: 140 60% 99%;
     --foreground: 145 50% 10%;
     --card: 0 0% 100%;
@@ -25,42 +25,54 @@
     --border: 140 25% 92%;
     --input: 140 25% 92%;
     --ring: 142 76% 40%;
-    --radius: 1.5rem;
+    --radius: 2rem;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border focus-visible:ring-primary/40 focus-visible:ring-offset-2 outline-none;
   }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
   }
 }
 
+/* Accessibility: Clear focus states */
+:focus-visible {
+  @apply ring-2 ring-primary ring-offset-background;
+}
+
 .glass-card {
-  @apply bg-white/70 backdrop-blur-xl border border-white/80 shadow-[0_8px_32px_0_rgba(16,185,129,0.05)];
+  @apply bg-white/70 backdrop-blur-2xl border border-white shadow-[0_20px_60px_-15px_rgba(16,185,129,0.08)] transition-all duration-300;
 }
 
 .emerald-glow {
-  text-shadow: 0 0 30px hsl(var(--primary) / 0.3);
+  text-shadow: 0 0 35px hsl(var(--primary) / 0.4);
 }
 
 .nav-active {
-  @apply bg-primary/10 text-primary border-l-4 border-primary;
+  @apply bg-primary text-white shadow-xl shadow-primary/25 border-none scale-[1.02];
 }
 
-/* Custom scrollbar to match theme */
+/* Performance: Optimized transitions */
+.transition-all {
+  will-change: transform, opacity;
+}
+
+/* Custom Scrollbar Performance */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 ::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.02);
+  background: rgba(0,0,0,0.01);
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(140 30% 88%);
-  border-radius: 10px;
+  background: hsl(140 20% 88%);
+  border-radius: 12px;
+  border: 3px solid rgba(255,255,255,0.8);
 }
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(140 30% 80%);
@@ -73,6 +85,6 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: hsl(140 30% 85%);
+  background: hsl(140 30% 90%);
   border-radius: 10px;
 }
