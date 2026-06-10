@@ -25,8 +25,8 @@ export default function RootPage() {
   }, [user, isLoading, router, mounted]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-transparent relative z-50">
-      <div className="flex flex-col items-center gap-6 animate-pulse p-10 bg-white/40 backdrop-blur-2xl rounded-[3rem] shadow-2xl">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] bg-transparent relative z-50">
+      <div className="flex flex-col items-center gap-6 animate-pulse p-10 bg-white/40 backdrop-blur-2xl rounded-[3rem] shadow-2xl border border-white/20">
         <div className="p-4 bg-primary/10 rounded-[2rem] ring-8 ring-primary/5">
           <Leaf className="h-12 w-12 text-primary" />
         </div>

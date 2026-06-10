@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,7 +33,7 @@
     @apply border-border focus-visible:ring-primary/40 focus-visible:ring-offset-2 outline-none;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground bg-transparent;
     font-feature-settings: "rlig" 1, "calt" 1;
     text-rendering: optimizeLegibility;
   }
@@ -46,7 +45,7 @@
 }
 
 .glass-card {
-  @apply bg-white/70 backdrop-blur-2xl border border-white shadow-[0_20px_60px_-15px_rgba(16,185,129,0.08)] transition-all duration-300;
+  @apply bg-white/50 backdrop-blur-xl border border-white/40 shadow-[0_20px_60px_-15px_rgba(16,185,129,0.08)] transition-all duration-300;
 }
 
 .emerald-glow {
