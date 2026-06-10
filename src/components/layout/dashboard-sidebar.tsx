@@ -9,39 +9,23 @@ import {
   BookOpen, 
   User, 
   Settings, 
-  LogOut, 
-  Leaf
+  Home,
+  Leaf,
+  Trophy
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
 
 const menuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Calculator', href: '/calculator', icon: Calculator },
+  { name: 'Impact Audit', href: '/calculator', icon: Calculator },
   { name: 'Knowledge Hub', href: '/knowledge-hub', icon: BookOpen },
+  { name: 'My Progress', href: '/progress', icon: Trophy },
   { name: 'Profile', href: '/profile', icon: User },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const auth = useAuth();
-
-  const handleLogout = async () => {
-    // During design phase, logout just returns to landing page
-    try {
-      if (auth.currentUser) {
-        await signOut(auth);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    router.push('/');
-  };
 
   return (
     <aside className="w-64 border-r border-white/5 flex flex-col h-screen sticky top-0 bg-card/30 backdrop-blur-xl z-40">
@@ -78,15 +62,11 @@ export function DashboardSidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/5">
-        <Button 
-          variant="ghost" 
-          className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl px-4 py-6 transition-colors"
-          onClick={handleLogout}
-        >
-          <LogOut className="mr-3 h-5 w-5" />
-          Exit Demo
-        </Button>
+      <div className="p-6 border-t border-white/5 mt-auto">
+        <div className="p-4 rounded-2xl bg-primary/10 border border-primary/20">
+           <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">Preview Mode</p>
+           <p className="text-xs text-muted-foreground leading-relaxed">Design phase active. Authentication disabled.</p>
+        </div>
       </div>
     </aside>
   );

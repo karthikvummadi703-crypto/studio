@@ -13,17 +13,9 @@ export default function DashboardLayout({
 }) {
   const { isLoading } = useUser();
 
-  // Auth gate completely removed for design phase.
-  // All pages are accessible to guests to review layout and interactions.
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-10 w-10 text-primary animate-spin" />
-      </div>
-    );
-  }
-
+  // During the design phase, we skip the loading state if it hangs 
+  // and prioritize showing the UI structure.
+  
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <DashboardSidebar />
