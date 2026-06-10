@@ -1,24 +1,28 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Sparkles, Zap, Car, Utensils, ShoppingBag, Send } from 'lucide-react';
-import { auth, db } from '@/lib/firebase';
-import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { generateReductionPlan, GenerateReductionPlanOutput } from '@/ai/flows/generate-reduction-plan';
 
 export default function InsightsPage() {
+  const { user } = useUser();
+  const db = useFirestore();
   const [loading, setLoading] = useState(false);
   const [insight, setInsight] = useState<GenerateReductionPlanOutput | null>(null);
   const [latestRecord, setLatestRecord] = useState<any>(null);
 
   useEffect(() => {
     async function fetchLatestRecord() {
-      if (auth.currentUser) {
+      if (user && db) {
         const q = query(
-          collection(db, 'carbon_records'),
+          collection(db, 'calculator_records'),
+          where('userId', '==', user.uid),
           orderBy('timestamp', 'desc'),
           limit(1)
         );
@@ -29,15 +33,20 @@ export default function InsightsPage() {
       }
     }
     fetchLatestRecord();
-  }, []);
+  }, [user, db]);
 
   const handleGenerate = async () => {
     if (!latestRecord) return;
     setLoading(true);
     try {
       const result = await generateReductionPlan({
-        totalEmissions: latestRecord.totalEmissions,
-        emissionsBreakdown: latestRecord.breakdown
+        totalEmissions: latestRecord.co2 || latestRecord.totalEmissions || 0,
+        emissionsBreakdown: latestRecord.breakdown || {
+          transportation: latestRecord.co2 || 0,
+          homeEnergy: 0,
+          food: 0,
+          lifestyle: 0
+        }
       });
       setInsight(result);
     } catch (e) {
@@ -61,7 +70,7 @@ export default function InsightsPage() {
         )}
       </div>
 
-      {!latestRecord && (
+      {!latestRecord && !loading && (
         <Card className="glass-card border-dashed border-2 border-white/10">
           <CardContent className="flex flex-col items-center justify-center py-20 text-center space-y-4">
              <div className="p-4 bg-white/5 rounded-full"><Sparkles className="h-10 w-10 text-muted-foreground" /></div>
@@ -104,7 +113,7 @@ export default function InsightsPage() {
                 Weekly Action Plan
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground">
+            <CardContent className="text-muted-foreground whitespace-pre-wrap">
               {insight.weeklyActionPlan}
             </CardContent>
           </Card>
@@ -116,7 +125,7 @@ export default function InsightsPage() {
                 Monthly Strategy
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground">
+            <CardContent className="text-muted-foreground whitespace-pre-wrap">
               {insight.monthlyImprovementStrategy}
             </CardContent>
           </Card>
@@ -148,6 +157,7 @@ export default function InsightsPage() {
 }
 
 function InsightCategoryCard({ title, icon: Icon, items }: any) {
+  if (!items || items.length === 0) return null;
   return (
     <Card className="glass-card border-none">
       <CardHeader>
