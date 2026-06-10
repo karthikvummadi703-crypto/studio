@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS, APP_METADATA } from '@/lib/constants';
 
 /**
- * Enhanced Login page with optimized auth handlers.
+ * Secure Login Page with Middleware Session Synchronization.
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +32,14 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   /**
+   * Sets the session cookie for middleware authentication.
+   */
+  const setSessionCookie = useCallback(async (user: any) => {
+    const idToken = await user.getIdToken();
+    document.cookie = `__session=${idToken}; path=/; secure; samesite=strict; max-age=3600`;
+  }, []);
+
+  /**
    * Handles standard email/password authentication.
    */
   const handleLogin = useCallback(async (e: React.FormEvent): Promise<void> => {
@@ -40,7 +48,8 @@ export default function LoginPage() {
     
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await setSessionCookie(userCredential.user);
       router.push('/dashboard');
     } catch (error: any) {
       toast({
@@ -51,10 +60,10 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }, [email, password, router, toast]);
+  }, [email, password, router, toast, setSessionCookie]);
 
   /**
-   * Handles Google OAuth login with atomic profile synchronization.
+   * Handles Google OAuth login with session synchronization.
    */
   const handleGoogleLogin = useCallback(async (): Promise<void> => {
     setGoogleLoading(true);
@@ -74,6 +83,7 @@ export default function LoginPage() {
         completedChallenges: []
       }, { merge: true });
       
+      await setSessionCookie(user);
       router.push('/dashboard');
     } catch (error: any) {
       toast({
@@ -84,7 +94,7 @@ export default function LoginPage() {
     } finally {
       setGoogleLoading(false);
     }
-  }, [router, toast]);
+  }, [router, toast, setSessionCookie]);
 
   /**
    * Initializes anonymous session for the Demo Mode.
@@ -113,6 +123,7 @@ export default function LoginPage() {
         timestamp: serverTimestamp()
       });
 
+      await setSessionCookie(user);
       router.push('/dashboard');
     } catch (error: any) {
       toast({
@@ -123,7 +134,7 @@ export default function LoginPage() {
     } finally {
       setDemoLoading(false);
     }
-  }, [router, toast]);
+  }, [router, toast, setSessionCookie]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative">

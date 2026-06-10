@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,9 +28,10 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { COLLECTIONS } from '@/lib/constants';
+import { UserProfile } from '@/types';
 
 /**
- * Enhanced User Profile Page with stable data loading.
+ * Enhanced User Profile Page with strict session cleanup.
  */
 export default function ProfilePage() {
   const { user, isLoading: authLoading } = useUser();
@@ -39,22 +40,26 @@ export default function ProfilePage() {
   const router = useRouter();
 
   const profileRef = useMemo(() => (user && db ? doc(db, COLLECTIONS.USERS, user.uid) : null), [user, db]);
-  const { data: profile, isLoading: profileLoading } = useDoc<any>(profileRef);
+  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as any);
 
   const [activeTab, setActiveTab] = useState('overview');
 
-  const handleLogout = async () => {
+  /**
+   * Clears session cookie and signs out of Firebase.
+   */
+  const handleLogout = useCallback(async () => {
     if (!auth) return;
+    document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
     await signOut(auth);
     router.push('/login');
-  };
+  }, [auth, router]);
 
   const level = useMemo(() => getLevelFromPoints(profile?.greenPoints || 0), [profile?.greenPoints]);
 
   const joinedDate = useMemo(() => {
     if (!profile?.createdAt) return "---";
     try {
-      const date = profile.createdAt?.toDate ? profile.createdAt.toDate() : new Date(profile.createdAt);
+      const date = (profile.createdAt as any)?.toDate ? (profile.createdAt as any).toDate() : new Date(profile.createdAt as string);
       return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     } catch (e) {
       return "---";
@@ -126,8 +131,8 @@ export default function ProfilePage() {
         </div>
 
         <div className="lg:col-span-3 space-y-8">
-          {activeTab === 'overview' && (
-            <Card className="glass-card rounded-[2.5rem] overflow-hidden">
+          {activeTab === 'overview' && profile && (
+            <Card className="bg-white border-zinc-100 rounded-[2.5rem] overflow-hidden">
               <CardHeader className="bg-primary/5 border-b border-black/5 p-10">
                 <div className="flex items-center gap-8">
                    <div className="h-24 w-24 rounded-[2rem] bg-primary flex items-center justify-center text-white font-headline text-4xl font-bold shadow-2xl ring-8 ring-primary/10">
@@ -150,7 +155,7 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center md:text-left">
                   <div className="space-y-1">
                     <p className="text-[10px] text-zinc-600 uppercase font-black tracking-widest">Sustainability Score</p>
-                    <p className="text-4xl font-headline font-bold text-primary emerald-glow">{profile.sustainabilityScore || 0}</p>
+                    <p className="text-4xl font-headline font-bold text-primary">{profile.sustainabilityScore || 0}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-[10px] text-zinc-600 uppercase font-black tracking-widest">Green Points</p>
@@ -195,7 +200,7 @@ export default function ProfilePage() {
           )}
 
           {activeTab === 'settings' && (
-            <Card className="glass-card rounded-[2.5rem] p-10">
+            <Card className="bg-white border-zinc-100 rounded-[2.5rem] p-10">
               <CardHeader className="px-0 pt-0 pb-10">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-primary rounded-2xl">
@@ -223,14 +228,6 @@ export default function ProfilePage() {
                   </div>
                   <Switch defaultChecked />
                 </div>
-
-                <div className="flex items-center justify-between p-6 bg-zinc-50 rounded-2xl border border-zinc-100">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-bold text-foreground">Public Statistics</Label>
-                    <p className="text-xs text-zinc-500">Allow others to see your environmental level and rank.</p>
-                  </div>
-                  <Switch />
-                </div>
               </CardContent>
             </Card>
           )}
@@ -252,7 +249,7 @@ export default function ProfilePage() {
                  <div className="p-8 rounded-2xl bg-white border border-red-100 space-y-4">
                     <h4 className="font-bold text-foreground">Terminate Account</h4>
                     <p className="text-sm text-zinc-500 leading-relaxed">
-                      Deleting your account will permanently remove all green points, challenge progress, and historical carbon telemetry. This action cannot be undone.
+                      Deleting your account will permanently remove all green points, challenge progress, and historical carbon telemetry.
                     </p>
                     <Button variant="destructive" className="rounded-xl font-bold h-12 px-8">
                       Permanently Delete Account

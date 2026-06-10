@@ -1,6 +1,6 @@
-
 "use client";
 
+import { useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -11,15 +11,22 @@ import { useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
+/**
+ * Settings Page with session cleanup.
+ */
 export default function SettingsPage() {
   const auth = useAuth();
   const router = useRouter();
 
-  const handleLogout = async () => {
+  /**
+   * Clears session cookie and signs out of Firebase.
+   */
+  const handleLogout = useCallback(async () => {
     if (!auth) return;
+    document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
     await signOut(auth);
     router.push('/login');
-  };
+  }, [auth, router]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
@@ -29,7 +36,7 @@ export default function SettingsPage() {
       </header>
 
       <div className="grid gap-6">
-        <Card className="glass-card border-none">
+        <Card className="bg-white border-zinc-100 shadow-sm rounded-2xl">
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2 text-foreground">
               <Bell className="h-5 w-5 text-primary" />
@@ -56,7 +63,7 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-none">
+        <Card className="bg-white border-zinc-100 shadow-sm rounded-2xl">
           <CardHeader>
             <CardTitle className="font-headline flex items-center gap-2 text-foreground">
               <Shield className="h-5 w-5 text-primary" />
@@ -80,7 +87,7 @@ export default function SettingsPage() {
             <LogOut className="mr-2 h-4 w-4" /> Logout from EcoPulse
           </Button>
           
-          <Card className="glass-card border-none border-destructive/20 bg-destructive/5">
+          <Card className="bg-red-50 border-red-100 rounded-2xl">
             <CardHeader>
               <CardTitle className="font-headline text-destructive flex items-center gap-2 text-lg">
                 <Trash2 className="h-5 w-5" />
