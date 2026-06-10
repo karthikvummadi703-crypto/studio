@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect } from 'react';
@@ -6,7 +7,8 @@ import { useUser } from '@/firebase';
 import { Loader2, Leaf } from 'lucide-react';
 
 /**
- * Root page with intelligent Auth redirection and state protection.
+ * Root page with intelligent Auth redirection.
+ * Ensures the preview lands on /login if no session is active.
  */
 export default function RootPage() {
   const router = useRouter();

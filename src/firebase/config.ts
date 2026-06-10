@@ -21,11 +21,9 @@ try {
   auth = getAuth(app);
   db = getFirestore(app);
 } catch (error) {
-  // Graceful fallback for design/preview phase
-  console.warn("Firebase initialization failed. Using demo mode.");
-  app = {} as any;
-  auth = {} as any;
-  db = {} as any;
+  console.error("Firebase initialization failed:", error);
+  // Re-throw or handle as critical
+  throw error;
 }
 
 export { app, auth, db };
