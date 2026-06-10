@@ -17,15 +17,15 @@ export default function DashboardLayout({
 
   return (
     <div className="relative min-h-screen bg-background text-foreground font-body overflow-hidden">
-      {/* Dynamic Background Image - Vibrant Lush Green Valley */}
+      {/* Updated Background Image - Vibrant Lush Valley with Flowers */}
       <div 
-        className="fixed inset-0 z-0 opacity-80 pointer-events-none bg-cover bg-center transition-opacity duration-1000" 
-        style={{ backgroundImage: "url('https://picsum.photos/seed/ecopulse-vibrant-valley/1920/1080')" }}
-        data-ai-hint="vibrant lush green valley mountains"
+        className="fixed inset-0 z-0 opacity-100 pointer-events-none bg-cover bg-center transition-opacity duration-1000" 
+        style={{ backgroundImage: "url('https://picsum.photos/seed/ecopulse-vibrant-bloom/1920/1080')" }}
+        data-ai-hint="vibrant lush valley flowers"
       />
       
-      {/* Light Gradient Overlay to ensure readability and brighten the view */}
-      <div className="fixed inset-0 z-0 bg-gradient-to-b from-white/10 via-white/20 to-white/10 pointer-events-none backdrop-brightness-110" />
+      {/* Light Gradient Overlay for readability and brightening */}
+      <div className="fixed inset-0 z-0 bg-gradient-to-b from-white/20 via-white/10 to-white/30 pointer-events-none backdrop-brightness-105" />
 
       <div className="relative z-10 flex h-screen">
         <DashboardSidebar />

@@ -2,10 +2,10 @@
 {
   "placeholderImages": [
     {
-      "id": "eco-valley-bg",
-      "description": "Lush green valley landscape for sustainability app background",
-      "imageUrl": "https://picsum.photos/seed/ecopulse-vibrant-valley/1920/1080",
-      "imageHint": "vibrant lush green valley mountains"
+      "id": "eco-vibrant-valley",
+      "description": "Vibrant lush green valley with wild flowers and blue sky",
+      "imageUrl": "https://picsum.photos/seed/ecopulse-vibrant-bloom/1920/1080",
+      "imageHint": "vibrant lush valley flowers"
     }
   ]
 }
