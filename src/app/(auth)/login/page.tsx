@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -142,8 +141,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative bg-background">
-      <Card className="w-full max-w-md bg-white border-zinc-200 shadow-2xl rounded-[2.5rem] overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center p-6 relative">
+      <Card className="w-full max-w-md bg-white/80 backdrop-blur-2xl border-zinc-200 shadow-2xl rounded-[2.5rem] overflow-hidden">
         <CardHeader className="p-10 text-center space-y-4">
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto ring-8 ring-primary/5">
             <Leaf className="h-8 w-8 text-primary" />
@@ -197,7 +196,7 @@ export default function LoginPage() {
 
           <div className="relative py-2">
             <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-zinc-100"></span></div>
-            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]"><span className="bg-white px-2 text-zinc-400">Or</span></div>
+            <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-[0.2em]"><span className="bg-white/50 px-2 text-zinc-400">Or</span></div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

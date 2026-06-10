@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
@@ -35,8 +34,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
 
-  // Fixed structural shell to prevent hydration mismatch.
-  // The outer div and main tags are always rendered to keep the DOM tree stable.
+  // STABLE SHELL: The root element MUST be identical on server and client to avoid hydration failure.
   return (
     <div className="flex h-screen overflow-hidden w-full bg-transparent">
       {/* Sidebar - Deferred until mounted and check auth page */}
@@ -62,15 +60,15 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Header - Deferred until mounted and check auth page */}
+      {/* Main Content Area - Stable container shell */}
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-transparent">
+        {/* Header - Deferred */}
         {!isAuthPage && mounted && (
           <header className="h-16 border-b border-black/5 bg-white/40 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-sm transition-all">
             <div className="flex items-center gap-6">
               <button 
                 onClick={toggleSidebar}
-                className="p-2 hover:bg-primary/10 rounded-full text-primary transition-all flex items-center justify-center focus:ring-2 focus:ring-primary/20 outline-none"
+                className="p-2 hover:bg-primary/10 rounded-full text-primary transition-all flex items-center justify-center"
                 aria-expanded={isSidebarOpen}
                 aria-label="Toggle navigation menu"
               >
@@ -85,27 +83,20 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
             
             <div className="flex items-center gap-4">
               <div className="hidden md:flex relative w-48 group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" aria-hidden="true" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input 
                   placeholder="Search metrics..." 
                   className="pl-9 h-8 bg-white/40 border-primary/10 focus-visible:ring-primary/20 rounded-full text-[10px] shadow-none"
                 />
               </div>
               
-              <button 
-                className="relative p-2 text-muted-foreground hover:text-primary transition-colors focus:ring-2 focus:ring-primary/20 rounded-full"
-                aria-label="Notifications"
-              >
+              <button className="relative p-2 text-muted-foreground hover:text-primary transition-colors">
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border-2 border-white shadow-sm"></span>
               </button>
               
               <div className="flex items-center gap-3 pl-4 border-l border-primary/10">
-                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] font-bold text-foreground leading-tight">{user?.displayName || 'Eco Warrior'}</p>
-                  <p className="text-[8px] font-bold text-primary tracking-widest uppercase">Verified Account</p>
-                </div>
-                <Avatar className="h-8 w-8 border border-primary/30 rounded-lg bg-primary/10 shadow-sm ring-offset-2 ring-primary/5">
+                <Avatar className="h-8 w-8 border border-primary/30 rounded-lg bg-primary/10 shadow-sm">
                   <AvatarFallback className="text-primary text-[10px] font-bold">
                     {userInitial}
                   </AvatarFallback>
@@ -115,12 +106,12 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
           </header>
         )}
         
-        {/* Content Region - Structurally consistent shell */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative focus:outline-none" tabIndex={-1}>
+        {/* Scrollable Content Region */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative focus:outline-none">
           <div className="max-w-7xl mx-auto pb-24">
             {children}
           </div>
-          {/* Floating Advisor - Deferred */}
+          {/* Floating Advisor - Only for authenticated sessions */}
           {!isAuthPage && mounted && <FloatingAIAdvisor />}
         </main>
       </div>
