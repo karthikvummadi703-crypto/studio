@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '@/firebase';
+import { auth, db, useUser } from '@/firebase';
 import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,13 +22,24 @@ import { cn } from '@/lib/utils';
  * Registration page component for creating new environment nodes.
  */
 export default function RegisterPage() {
+  const { user, isLoading: authLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  /**
+   * Auth Guard: Redirect already authenticated users to the dashboard.
+   */
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   /**
    * Validates registration input with enhanced security and XSS protection.
@@ -73,9 +84,9 @@ export default function RegisterPage() {
 
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const user = cred.user;
+      const userRefData = cred.user;
 
-      await updateProfile(user, { displayName: fullName });
+      await updateProfile(userRefData, { displayName: fullName });
 
       const userData = {
         fullName: fullName.trim(),
@@ -87,11 +98,11 @@ export default function RegisterPage() {
         completedChallenges: []
       };
 
-      const userRef = doc(db, COLLECTIONS.USERS, user.uid);
-      await setDoc(userRef, userData).catch((err) => {
+      const userDocRef = doc(db, COLLECTIONS.USERS, userRefData.uid);
+      await setDoc(userDocRef, userData).catch((err) => {
         if (err.code === 'permission-denied') {
           const pErr = new FirestorePermissionError({ 
-            path: userRef.path, 
+            path: userDocRef.path, 
             operation: 'create', 
             requestResourceData: userData 
           });
@@ -102,7 +113,7 @@ export default function RegisterPage() {
       });
 
       await addDoc(collection(db, COLLECTIONS.ACTIVITIES), {
-        userId: user.uid,
+        userId: userRefData.uid,
         type: 'initialization',
         description: 'Profile telemetry initialized',
         pointsEarned: 0,
@@ -122,6 +133,14 @@ export default function RegisterPage() {
       setLoading(false);
     }
   }, [fullName, email, password, validateInput, router, toast]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative">
