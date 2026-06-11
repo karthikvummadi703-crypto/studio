@@ -3,14 +3,17 @@
 import { useState, useEffect } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config';
+import { IS_DEMO_KEY } from '@/lib/constants';
 
 /**
  * Production-ready useUser hook.
- * Treats anonymous Firebase sessions as unauthenticated to ensure Login Page priority.
+ * - Blocks anonymous sessions from accessing protected routes.
+ * - Exposes isDemo flag so components can adapt their UI for demo sessions.
  */
 export const useUser = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     if (!auth) {
@@ -19,10 +22,20 @@ export const useUser = () => {
     }
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      // Treat anonymous users as unauthenticated to prevent auto-login to Demo mode
       if (firebaseUser && firebaseUser.isAnonymous) {
-        setUser(null);
+        // Anonymous users are only allowed if they explicitly entered demo mode
+        const demoFlag =
+          typeof sessionStorage !== 'undefined' &&
+          sessionStorage.getItem(IS_DEMO_KEY) === 'true';
+        if (demoFlag) {
+          setIsDemo(true);
+          setUser(firebaseUser);
+        } else {
+          setIsDemo(false);
+          setUser(null);
+        }
       } else {
+        setIsDemo(false);
         setUser(firebaseUser);
       }
       setIsLoading(false);
@@ -31,5 +44,5 @@ export const useUser = () => {
     return () => unsubscribe();
   }, []);
 
-  return { user, isLoading };
+  return { user, isLoading, isDemo };
 };
