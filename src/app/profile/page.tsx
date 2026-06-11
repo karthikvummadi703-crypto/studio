@@ -29,6 +29,7 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { COLLECTIONS, IS_DEMO_KEY } from '@/lib/constants';
 import type { UserProfile } from '@/types';
+import { clearSessionCookieAction } from '@/app/actions/session';
 
 /**
  * Enhanced User Profile Page with strict session cleanup.
@@ -50,7 +51,7 @@ export default function ProfilePage() {
   const handleLogout = useCallback(async () => {
     if (!auth) return;
     sessionStorage.removeItem(IS_DEMO_KEY);
-    document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+    await clearSessionCookieAction();
     await signOut(auth);
     router.push('/login');
   }, [auth, router]);

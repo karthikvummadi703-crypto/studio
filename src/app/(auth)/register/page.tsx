@@ -18,6 +18,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/handle-error';
+import { setSessionCookieAction } from '@/app/actions/session';
 
 /**
  * Registration page component for creating new environment nodes.
@@ -43,11 +44,11 @@ export default function RegisterPage() {
   }, [user, authLoading, router]);
 
   /**
-   * Sets the session cookie for middleware authentication.
+   * Sets the session cookie via server action.
    */
-  const setSessionCookie = useCallback(async (user: User) => {
+  const handleSession = useCallback(async (user: User) => {
     const idToken = await user.getIdToken();
-    document.cookie = `__session=${idToken}; path=/; secure; samesite=strict; max-age=3600`;
+    await setSessionCookieAction(idToken);
   }, []);
 
   /**
@@ -130,7 +131,7 @@ export default function RegisterPage() {
       });
 
       sessionStorage.removeItem(IS_DEMO_KEY);
-      await setSessionCookie(userRefData);
+      await handleSession(userRefData);
       
       toast({ title: "Node Registered", description: "Welcome to EcoPulse AI!" });
       router.push('/dashboard');
@@ -144,7 +145,7 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
-  }, [fullName, email, password, validateInput, router, toast, setSessionCookie]);
+  }, [fullName, email, password, validateInput, router, toast, handleSession]);
 
   if (authLoading) {
     return (

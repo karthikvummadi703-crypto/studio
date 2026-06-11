@@ -6,6 +6,7 @@ import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { IS_DEMO_KEY } from '@/lib/constants';
+import { clearSessionCookieAction } from '@/app/actions/session';
 
 /**
  * Sticky banner shown at the top of every app page for demo users.
@@ -17,7 +18,7 @@ export function DemoBanner() {
 
   const handleExitDemo = async () => {
     sessionStorage.removeItem(IS_DEMO_KEY);
-    document.cookie = '__session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict';
+    await clearSessionCookieAction();
     if (auth) await signOut(auth);
     router.push('/login');
   };

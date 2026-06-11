@@ -23,6 +23,7 @@ import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS, APP_METADATA, DEMO_USER, IS_DEMO_KEY } from '@/lib/constants';
 import { getErrorMessage } from '@/lib/handle-error';
+import { setSessionCookieAction } from '@/app/actions/session';
 
 /**
  * Login page with email/password, Google OAuth, Forgot Password link, and Demo Mode.
@@ -36,9 +37,9 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
 
-  const setSessionCookie = useCallback(async (user: User) => {
+  const handleSession = useCallback(async (user: User) => {
     const idToken = await user.getIdToken();
-    document.cookie = `__session=${idToken}; path=/; secure; samesite=strict; max-age=3600`;
+    await setSessionCookieAction(idToken);
   }, []);
 
   const handleLogin = useCallback(async (e: React.FormEvent): Promise<void> => {
@@ -48,7 +49,7 @@ export default function LoginPage() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       sessionStorage.removeItem(IS_DEMO_KEY);
-      await setSessionCookie(userCredential.user);
+      await handleSession(userCredential.user);
       router.push('/dashboard');
     } catch (error: unknown) {
       toast({
@@ -59,7 +60,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }, [email, password, router, toast, setSessionCookie]);
+  }, [email, password, router, toast, handleSession]);
 
   const handleGoogleLogin = useCallback(async (): Promise<void> => {
     setGoogleLoading(true);
@@ -78,7 +79,7 @@ export default function LoginPage() {
         completedChallenges: [],
       }, { merge: true });
       sessionStorage.removeItem(IS_DEMO_KEY);
-      await setSessionCookie(user);
+      await handleSession(user);
       router.push('/dashboard');
     } catch (error: unknown) {
       toast({
@@ -89,7 +90,7 @@ export default function LoginPage() {
     } finally {
       setGoogleLoading(false);
     }
-  }, [router, toast, setSessionCookie]);
+  }, [router, toast, handleSession]);
 
   const handleDemoMode = useCallback(async (): Promise<void> => {
     setDemoLoading(true);
@@ -113,7 +114,7 @@ export default function LoginPage() {
         timestamp: serverTimestamp(),
       });
       sessionStorage.setItem(IS_DEMO_KEY, 'true');
-      await setSessionCookie(user);
+      await handleSession(user);
       router.push('/dashboard');
     } catch (error: unknown) {
       toast({
@@ -125,7 +126,7 @@ export default function LoginPage() {
     } finally {
       setDemoLoading(false);
     }
-  }, [router, toast, setSessionCookie]);
+  }, [router, toast, handleSession]);
 
   const anyLoading = loading || googleLoading || demoLoading;
 
