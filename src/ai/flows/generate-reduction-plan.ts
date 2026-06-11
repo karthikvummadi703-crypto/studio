@@ -24,20 +24,25 @@ const RecommendationSchema = z.object({
 const GenerateReductionPlanInputSchema = z.object({
   totalEmissions: z
     .number()
+    .nonnegative()
     .describe('The user\u0027s total estimated carbon emissions in kgCO2e.'),
   emissionsBreakdown: z
     .object({
       transportation: z
         .number()
+        .nonnegative()
         .describe('Carbon emissions from transportation in kgCO2e.'),
       homeEnergy: z
         .number()
+        .nonnegative()
         .describe('Carbon emissions from home energy in kgCO2e.'),
       food: z
         .number()
+        .nonnegative()
         .describe('Carbon emissions from food consumption in kgCO2e.'),
       lifestyle: z
         .number()
+        .nonnegative()
         .describe('Carbon emissions from lifestyle choices in kgCO2e.'),
     })
     .describe('Breakdown of carbon emissions by category.'),
@@ -99,7 +104,7 @@ Prioritize recommendations that address the highest emission categories and are 
 /**
  * Genkit flow for generating a reduction plan.
  */
-const generateReductionPlanFlow = ai.defineFlow(
+export const generateReductionPlanFlow = ai.defineFlow(
   {
     name: 'generateReductionPlanFlow',
     inputSchema: GenerateReductionPlanInputSchema,

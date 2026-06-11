@@ -9,13 +9,13 @@ import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
 const GenerateCarbonAnalysisInputSchema = z.object({
-  userName: z.string().describe('The name of the user.'),
-  totalEmissions: z.number().describe('The user\'s total carbon emissions in kgCO2e.'),
+  userName: z.string().min(1).describe('The name of the user.'),
+  totalEmissions: z.number().nonnegative().describe('The user\'s total carbon emissions in kgCO2e.'),
   emissionsBreakdown: z.object({
-    transportation: z.number().describe('Carbon emissions from transportation in kgCO2e.'),
-    homeEnergy: z.number().describe('Carbon emissions from home energy in kgCO2e.'),
-    food: z.number().describe('Carbon emissions from food consumption in kgCO2e.'),
-    lifestyle: z.number().describe('Carbon emissions from lifestyle choices in kgCO2e.'),
+    transportation: z.number().nonnegative().describe('Carbon emissions from transportation in kgCO2e.'),
+    homeEnergy: z.number().nonnegative().describe('Carbon emissions from home energy in kgCO2e.'),
+    food: z.number().nonnegative().describe('Carbon emissions from food consumption in kgCO2e.'),
+    lifestyle: z.number().nonnegative().describe('Carbon emissions from lifestyle choices in kgCO2e.'),
   }).describe('A breakdown of carbon emissions by category.'),
 });
 export type GenerateCarbonAnalysisInput = z.infer<typeof GenerateCarbonAnalysisInputSchema>;
