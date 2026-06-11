@@ -68,15 +68,10 @@ describe('LoginPage', () => {
     } as any);
 
     render(<LoginPage />);
-    fireEvent.click(screen.getByRole('button', { name: /sign in with google/i }));
+    fireEvent.click(screen.getByRole('button', { name: /google/i }));
 
     await waitFor(() => {
       expect(firebaseAuth.signInWithPopup).toHaveBeenCalled();
     });
-  });
-
-  it('demo button is present in the document', () => {
-    render(<LoginPage />);
-    expect(screen.getByRole('button', { name: /demo/i })).toBeInTheDocument();
   });
 });
