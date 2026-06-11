@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui';
 import { 
   Car, 
   Bus, 
@@ -14,7 +15,6 @@ import {
   Footprints, 
   Zap, 
   TramFront,
-  Loader2,
   MapPin,
   Navigation
 } from 'lucide-react';
@@ -227,7 +227,7 @@ export default function CalculatorPage() {
             disabled={calculating || !start.trim() || !destination.trim()}
             className="w-full h-16 bg-primary text-white text-base font-headline font-bold rounded-2xl shadow-xl shadow-primary/10 hover:opacity-95 hover:scale-[1.01] transition-all"
           >
-            {calculating ? <Loader2 className="h-6 w-6 animate-spin text-white" /> : "Initiate Impact Audit"}
+            {calculating ? <Spinner className="h-6 w-6 text-white" label="Executing impact audit..." /> : "Initiate Impact Audit"}
           </Button>
         </CardContent>
       </Card>
@@ -259,7 +259,7 @@ export default function CalculatorPage() {
                   disabled={saving}
                   className="bg-primary text-white h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"
                 >
-                  {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Commit Telemetry"}
+                  {saving ? <Spinner className="h-5 w-5" label="Committing telemetry..." /> : "Commit Telemetry"}
                 </Button>
                 <Button 
                   variant="outline" 

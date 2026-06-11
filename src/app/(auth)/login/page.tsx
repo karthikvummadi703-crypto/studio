@@ -18,7 +18,8 @@ import {
   Card, CardContent, CardHeader,
   CardTitle, CardDescription, CardFooter
 } from '@/components/ui/card';
-import { Loader2, Leaf, Mail, Lock, Sparkles, FlaskConical } from 'lucide-react';
+import { Leaf, Mail, Lock, Sparkles, FlaskConical } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS, APP_METADATA, DEMO_USER, IS_DEMO_KEY } from '@/lib/constants';
@@ -121,7 +122,7 @@ export default function LoginPage() {
         fullName: DEMO_USER.FULL_NAME,
         greenPoints: DEMO_USER.GREEN_POINTS,
         sustainabilityScore: DEMO_USER.SUSTAINABILITY_SCORE,
-        level: DEMO_USER.LEVEL,
+        level: LEVEL_CONFIG[DEMO_USER.LEVEL as keyof typeof LEVEL_CONFIG] ? DEMO_USER.LEVEL : 'Seedling',
         createdAt: serverTimestamp(),
         completedChallenges: [...DEMO_USER.COMPLETED_CHALLENGES],
       }, { merge: true });
@@ -249,7 +250,7 @@ export default function LoginPage() {
               className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform focus-visible:ring-2 focus-visible:ring-primary"
               disabled={anyLoading}
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Sign In'}
+              {loading ? <Spinner className="h-5 w-5" label="Signing in..." /> : 'Sign In'}
             </Button>
           </form>
 
@@ -271,7 +272,7 @@ export default function LoginPage() {
               aria-label="Sign in with Google"
             >
               {googleLoading
-                ? <Loader2 className="h-4 w-4 animate-spin" />
+                ? <Spinner className="h-4 w-4" label="Connecting Google..." />
                 : 'Google'}
             </Button>
             <Button
@@ -282,7 +283,7 @@ export default function LoginPage() {
               aria-label="Explore the app in Demo Mode"
             >
               {demoLoading
-                ? <Loader2 className="h-4 w-4 animate-spin" />
+                ? <Spinner className="h-4 w-4" label="Entering demo mode..." />
                 : <><Sparkles className="h-4 w-4" /> Demo</>}
             </Button>
           </div>

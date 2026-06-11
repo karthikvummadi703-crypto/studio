@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useUser, useFirestore, useCollection } from '@/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, Milestone, Award, TrendingDown, Sparkles, Target, Loader2 } from 'lucide-react';
+import { Spinner } from '@/components/ui';
+import { Trophy, Milestone, Award, TrendingDown, Sparkles, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buildUserCalculatorRecordsQuery } from '@/lib/firestore-queries';
 
@@ -63,7 +64,7 @@ export default function ProgressPage() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Loader2 className="h-10 w-10 text-primary animate-spin" />
+      <Spinner className="h-10 w-10 text-primary" label="Synchronizing impact analytics..." />
     </div>
   );
 

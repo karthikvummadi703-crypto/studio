@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Sparkles, Zap, Car, Utensils, ShoppingBag, Send } from 'lucide-react';
+import { Spinner } from '@/components/ui';
+import { Sparkles, Zap, Car, Utensils, ShoppingBag, Send } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { getDocs } from 'firebase/firestore';
 import { GenerateReductionPlanOutput } from '@/ai/flows/generate-reduction-plan';
@@ -73,7 +74,7 @@ export default function InsightsPage() {
         </div>
         {!insight && latestRecord && (
           <Button onClick={handleGenerate} disabled={loading} size="lg" className="bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><Sparkles className="mr-2 h-5 w-5" /> Generate My Strategy</>}
+            {loading ? <Spinner className="mr-2 h-4 w-4" label="Generating insights..." /> : <><Sparkles className="mr-2 h-5 w-5" /> Generate My Strategy</>}
           </Button>
         )}
       </div>
@@ -93,7 +94,7 @@ export default function InsightsPage() {
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-          <Loader2 className="h-12 w-12 text-primary animate-spin" />
+          <Spinner className="h-12 w-12 text-primary" label="Analyzing your footprint with Gemini AI..." />
           <p className="font-headline text-lg animate-pulse text-zinc-700">Analyzing your footprint with Gemini AI...</p>
         </div>
       )}

@@ -11,7 +11,8 @@ import {
   Card, CardContent, CardHeader,
   CardTitle, CardDescription, CardFooter
 } from '@/components/ui/card';
-import { Loader2, Leaf, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Leaf, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { APP_METADATA } from '@/lib/constants';
@@ -64,7 +65,7 @@ export default function ForgotPasswordPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <Spinner className="h-10 w-10 text-primary" label="Verifying session..." />
       </div>
     );
   }
@@ -156,7 +157,7 @@ export default function ForgotPasswordPage() {
                   disabled={loading}
                 >
                   {loading
-                    ? <Loader2 className="h-5 w-5 animate-spin" />
+                    ? <Spinner className="h-5 w-5" label="Sending reset link..." />
                     : 'Send Reset Link'}
                 </Button>
               </form>

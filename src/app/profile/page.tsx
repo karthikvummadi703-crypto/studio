@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Spinner } from '@/components/ui';
 import { 
   User, 
   Mail, 
@@ -18,8 +19,7 @@ import {
   Shield,
   LogOut,
   ChevronRight,
-  ShieldAlert,
-  Loader2
+  ShieldAlert
 } from 'lucide-react';
 import { useUser, useDoc, useFirestore, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -73,7 +73,7 @@ export default function ProfilePage() {
   if (loading) return (
     <div className="flex items-center justify-center h-full min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <Spinner className="h-10 w-10 text-primary" label="Syncing environmental node profile..." />
         <p className="text-primary font-bold uppercase tracking-widest text-[10px]">Syncing Environmental Node...</p>
       </div>
     </div>

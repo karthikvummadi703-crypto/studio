@@ -1,7 +1,7 @@
 "use client";
 
-import { Send, Loader2 } from 'lucide-react';
-import { Button, Input } from '@/components/ui';
+import { Send } from 'lucide-react';
+import { Button, Input, Spinner } from '@/components/ui';
 
 interface AdvisorInputProps {
   input: string;
@@ -35,7 +35,7 @@ export function AdvisorInput({ input, setInput, handleSend, isLoading }: Advisor
           aria-label="Send message"
         >
           {isLoading ? (
-            <Loader2 className="h-5 w-5 animate-spin text-white" />
+            <Spinner className="h-5 w-5 text-white" label="Sending message to AI..." />
           ) : (
             <Send className="h-5 w-5 text-white" />
           )}

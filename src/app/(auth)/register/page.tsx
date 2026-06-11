@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Loader2, Leaf, User as UserIcon, Mail, Lock } from 'lucide-react';
+import { Leaf, User as UserIcon, Mail, Lock } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from '@/lib/logger';
@@ -155,7 +156,7 @@ export default function RegisterPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <Spinner className="h-10 w-10 text-primary" label="Verifying network status..." />
       </div>
     );
   }
@@ -239,7 +240,7 @@ export default function RegisterPage() {
               className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform focus-visible:ring-2 focus-visible:ring-primary"
               disabled={loading}
             >
-              {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Register Node"}
+              {loading ? <Spinner className="h-5 w-5" label="Registering environment node..." /> : "Register Node"}
             </Button>
           </form>
         </CardContent>

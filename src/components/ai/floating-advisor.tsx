@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, X, Minimize2, Maximize2, ExternalLink, Loader2 } from 'lucide-react';
-import { Button, Card, CardContent, CardHeader, CardTitle, ScrollArea } from '@/components/ui';
+import { Sparkles, X, Minimize2, Maximize2, ExternalLink } from 'lucide-react';
+import { Button, Card, CardContent, CardHeader, CardTitle, ScrollArea, Spinner } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useUser, useDoc, useFirestore } from '@/firebase';
@@ -209,7 +209,7 @@ export function FloatingAIAdvisor() {
                 )}
                 {isLoading && !streamingText && (
                   <div className="flex items-center gap-3 text-[10px] text-primary uppercase font-black tracking-widest animate-pulse px-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Spinner className="h-4 w-4" label="AI is thinking..." />
                     Thinking...
                   </div>
                 )}

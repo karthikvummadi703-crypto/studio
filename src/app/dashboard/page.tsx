@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui';
 import { 
   Leaf, 
   TrendingDown, 
@@ -13,8 +14,7 @@ import {
   Sparkles,
   Info,
   ArrowRight,
-  CheckCircle2,
-  Loader2
+  CheckCircle2
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -100,8 +100,7 @@ export default function Dashboard() {
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-[60vh]" aria-busy="true">
-      <Loader2 className="h-10 w-10 text-primary animate-spin" />
-      <span className="sr-only">Synchronizing node telemetry...</span>
+      <Spinner className="h-10 w-10 text-primary" label="Synchronizing node telemetry..." />
     </div>
   );
 

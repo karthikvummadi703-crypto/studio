@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
-import { Loader2, Leaf } from 'lucide-react';
+import { Leaf } from 'lucide-react';
+import { Spinner } from '@/components/ui';
 
 /**
  * Root page redirector. Ensures Login is the entry point for guests.
@@ -25,7 +26,7 @@ export default function RootPage() {
           <Leaf className="h-10 w-10 text-primary" />
         </div>
         <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Initialising Node...</p>
-        <Loader2 className="h-5 w-5 text-primary animate-spin" />
+        <Spinner className="h-5 w-5 text-primary" label="Initializing environment node..." />
       </div>
     </div>
   );

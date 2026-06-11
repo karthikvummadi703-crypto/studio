@@ -6,7 +6,6 @@ import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/fi
 import { 
   Sparkles, 
   Send, 
-  Loader2, 
   History, 
   Plus, 
   MessageSquare,
@@ -15,7 +14,7 @@ import {
   User as UserIcon,
   AlertCircle
 } from 'lucide-react';
-import { Button, Input, Card, CardContent, CardHeader, CardTitle, ScrollArea, Badge } from '@/components/ui';
+import { Button, Input, Card, CardContent, CardHeader, CardTitle, ScrollArea, Badge, Spinner } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { getLevelFromPoints } from '@/lib/levels';
 import { useAdvisorData } from '@/hooks/use-advisor-data';
@@ -173,8 +172,7 @@ export default function AIAdvisorPage() {
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center" aria-busy="true">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <span className="sr-only">Loading strategic advisor...</span>
+        <Spinner className="h-10 w-10 text-primary" label="Loading strategic advisor..." />
       </div>
     );
   }
@@ -306,7 +304,7 @@ export default function AIAdvisorPage() {
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div className="p-6 rounded-[2rem] bg-primary/5 border border-primary/10 text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-3">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner className="h-4 w-4" label="Generating response..." />
                       Thinking...
                     </div>
                   </div>
@@ -342,7 +340,7 @@ export default function AIAdvisorPage() {
                 aria-label="Send query"
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 bg-primary hover:scale-105 transition-transform shadow-lg rounded-xl"
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                {loading ? <Spinner className="h-5 w-5" label="Sending query..." /> : <Send className="h-5 w-5" />}
               </Button>
             </div>
           </div>
