@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -78,12 +78,16 @@ export default function KnowledgeHubPage() {
   const db = useFirestore();
   const [selectedTopic, setSelectedTopic] = useState<any>(null);
   const [latestRecord, setLatestRecord] = useState<any>(null);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
     async function fetchOneTime() {
-      if (!db || !user) return;
+      if (!db || !user || fetchedRef.current) return;
+      
+      fetchedRef.current = true;
       const q = buildUserCalculatorRecordsQuery(db, user.uid, { limitCount: 1 });
       const snap = await getDocs(q);
+      
       if (!snap.empty) {
         setLatestRecord(snap.docs[0].data());
       }
