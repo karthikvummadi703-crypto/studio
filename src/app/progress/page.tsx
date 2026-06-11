@@ -17,6 +17,7 @@ interface CalculatorRecord {
   co2: number;
   timestamp: { toDate: () => Date } | string | number;
   userId: string;
+  id?: string;
 }
 
 interface GoalItemProps {
@@ -44,6 +45,11 @@ export default function ProgressPage() {
   
   const { data: records, isLoading } = useCollection<CalculatorRecord>(recordsQuery as any);
 
+  /**
+   * Memoized chart data with stable dependency tracking.
+   * Uses a composite key (length + first item ID) to ensure recomputations only 
+   * occur when the core data set is updated, avoiding overhead from hook reference changes.
+   */
   const chartData = useMemo(() => {
     if (!records?.length) return [];
     return records.map((r) => ({
@@ -51,7 +57,7 @@ export default function ProgressPage() {
       emissions: Number(r.co2 || 0).toFixed(2),
       goal: 1.5
     }));
-  }, [records]);
+  }, [records?.length, records?.[0]?.id]);
 
   const hasData = useMemo(() => chartData.length > 0, [chartData]);
 
