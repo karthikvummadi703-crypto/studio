@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { DashboardSidebar } from './dashboard-sidebar';
 import { MoreHorizontal, Bell, Search, X } from 'lucide-react';
@@ -31,6 +31,19 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
   }, []);
+
+  useEffect(() => {
+    if (!isSidebarOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeSidebar();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSidebarOpen, closeSidebar]);
 
   const userInitial = useMemo(() => {
     return user?.displayName?.[0] || user?.email?.[0] || 'E';
@@ -132,6 +145,7 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
           className="fixed inset-0 bg-black/10 z-40 md:hidden" 
           onClick={closeSidebar}
           aria-hidden="true"
+          role="presentation"
         />
       )}
     </div>
