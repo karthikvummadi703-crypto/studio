@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import { DashboardSidebar } from './dashboard-sidebar';
 import { DemoBanner } from './demo-banner';
-import { MoreHorizontal, Bell, Search, X } from 'lucide-react';
+import { MoreHorizontal, Bell, Search, X, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useUser } from '@/firebase';
@@ -144,7 +144,9 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
               "max-w-7xl mx-auto p-4 sm:p-8 pb-24 relative z-10",
               showNav && "min-h-full"
             )}>
-              {children}
+              <Suspense fallback={<div className="h-full flex items-center justify-center py-20"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>}>
+                {children}
+              </Suspense>
             </div>
             {showNav && <FloatingAIAdvisor />}
           </main>
