@@ -128,7 +128,10 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" title="Password" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Password</Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="password" title="Password" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Password</Label>
+                <Link href="/forgot-password" size="sm" className="text-[10px] font-bold text-primary hover:underline">Forgot Password?</Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" aria-hidden="true" />
                 <Input 

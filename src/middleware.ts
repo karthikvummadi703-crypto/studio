@@ -13,7 +13,7 @@ const PROTECTED_ROUTES = [
   '/settings',
 ];
 
-const AUTH_ROUTES = ['/login', '/register'];
+const AUTH_ROUTES = ['/login', '/register', '/forgot-password'];
 
 /**
  * Server-side authentication guard.
