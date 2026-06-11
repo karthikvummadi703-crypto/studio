@@ -93,7 +93,9 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
 
                 <div className="flex flex-col select-none">
                   <p className="text-[9px] font-black text-primary tracking-[0.2em] uppercase">EcoPulse AI</p>
-                  <h2 className="text-[11px] font-headline font-bold text-foreground uppercase tracking-widest hidden sm:block">Node Active</h2>
+                  <h2 className="text-[11px] font-headline font-bold text-foreground uppercase tracking-widest hidden sm:block">
+                    {isDemo ? 'Demo Session' : 'Node Active'}
+                  </h2>
                 </div>
               </div>
               
@@ -123,6 +125,11 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
                       {userInitial}
                     </AvatarFallback>
                   </Avatar>
+                  {isDemo && (
+                    <span className="hidden sm:inline text-[9px] font-black text-primary uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-lg">
+                      Demo
+                    </span>
+                  )}
                 </div>
               </div>
             </header>
