@@ -128,9 +128,15 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="password" title="Password" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Password</Label>
-                <Link href="/forgot-password" size="sm" className="text-[10px] font-bold text-primary hover:underline">Forgot Password?</Link>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">Password</Label>
+                <Link
+                  href="/forgot-password"
+                  className="text-[10px] font-bold text-primary hover:underline underline-offset-2 focus-visible:ring-1 focus-visible:ring-primary rounded outline-none"
+                  aria-label="Reset your password"
+                >
+                  Forgot password?
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" aria-hidden="true" />
