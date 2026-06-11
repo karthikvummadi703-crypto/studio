@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile, type User } from 'firebase/auth';
 import { auth, db, useUser } from '@/firebase';
-import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -98,6 +98,8 @@ export default function RegisterPage() {
 
       await updateProfile(userRefData, { displayName: fullName });
 
+      const batch = writeBatch(db);
+      
       const userData = {
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
@@ -109,25 +111,28 @@ export default function RegisterPage() {
       };
 
       const userDocRef = doc(db, COLLECTIONS.USERS, userRefData.uid);
-      await setDoc(userDocRef, userData).catch((err) => {
+      const activityDocRef = doc(collection(db, COLLECTIONS.ACTIVITIES));
+
+      batch.set(userDocRef, userData);
+      batch.set(activityDocRef, {
+        userId: userRefData.uid,
+        type: 'initialization',
+        description: 'Profile telemetry initialized',
+        pointsEarned: 0,
+        timestamp: serverTimestamp()
+      });
+
+      await batch.commit().catch((err) => {
         if (err.code === 'permission-denied') {
           const pErr = new FirestorePermissionError({ 
             path: userDocRef.path, 
-            operation: 'create', 
+            operation: 'write', 
             requestResourceData: userData 
           });
           errorEmitter.emit('permission-error', pErr);
           throw pErr;
         }
         throw err;
-      });
-
-      await addDoc(collection(db, COLLECTIONS.ACTIVITIES), {
-        userId: userRefData.uid,
-        type: 'initialization',
-        description: 'Profile telemetry initialized',
-        pointsEarned: 0,
-        timestamp: serverTimestamp()
       });
 
       sessionStorage.removeItem(IS_DEMO_KEY);

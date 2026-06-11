@@ -10,7 +10,7 @@ import {
   type User
 } from 'firebase/auth';
 import { auth, db } from '@/firebase';
-import { doc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,8 +68,12 @@ export default function LoginPage() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      const batch = writeBatch(db);
       const userRef = doc(db, COLLECTIONS.USERS, user.uid);
-      await setDoc(userRef, {
+      const activityRef = doc(collection(db, COLLECTIONS.ACTIVITIES));
+
+      batch.set(userRef, {
         fullName: user.displayName || 'Eco Warrior',
         email: user.email || '',
         greenPoints: 0,
@@ -78,6 +82,17 @@ export default function LoginPage() {
         createdAt: serverTimestamp(),
         completedChallenges: [],
       }, { merge: true });
+
+      batch.set(activityRef, {
+        userId: user.uid,
+        type: 'milestone',
+        description: 'Joined EcoPulse via Google Login',
+        pointsEarned: 0,
+        timestamp: serverTimestamp(),
+      });
+
+      await batch.commit();
+
       sessionStorage.removeItem(IS_DEMO_KEY);
       await handleSession(user);
       router.push('/dashboard');
@@ -97,8 +112,12 @@ export default function LoginPage() {
     try {
       const cred = await signInAnonymously(auth);
       const user = cred.user;
+
+      const batch = writeBatch(db);
       const userRef = doc(db, COLLECTIONS.USERS, user.uid);
-      await setDoc(userRef, {
+      const activityRef = doc(collection(db, COLLECTIONS.ACTIVITIES));
+
+      batch.set(userRef, {
         fullName: DEMO_USER.FULL_NAME,
         greenPoints: DEMO_USER.GREEN_POINTS,
         sustainabilityScore: DEMO_USER.SUSTAINABILITY_SCORE,
@@ -106,13 +125,17 @@ export default function LoginPage() {
         createdAt: serverTimestamp(),
         completedChallenges: [...DEMO_USER.COMPLETED_CHALLENGES],
       }, { merge: true });
-      await addDoc(collection(db, COLLECTIONS.ACTIVITIES), {
+
+      batch.set(activityRef, {
         userId: user.uid,
         type: 'milestone',
         description: 'Joined EcoPulse via Demo Mode',
         pointsEarned: 0,
         timestamp: serverTimestamp(),
       });
+
+      await batch.commit();
+
       sessionStorage.setItem(IS_DEMO_KEY, 'true');
       await handleSession(user);
       router.push('/dashboard');
