@@ -73,9 +73,14 @@ export function GlobalNavigation({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center gap-4">
-              <div className="hidden md:flex relative w-48 group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
+              <div className="hidden md:flex relative w-48 group" role="search">
+                <label htmlFor="global-search" className="sr-only">Search EcoPulse</label>
+                <Search 
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-primary transition-colors" 
+                  aria-hidden="true" 
+                />
                 <Input 
+                  id="global-search"
                   placeholder="Search..." 
                   aria-label="Search EcoPulse"
                   className="pl-9 h-8 bg-zinc-50 border-primary/10 rounded-full text-[10px] focus-visible:ring-primary"
