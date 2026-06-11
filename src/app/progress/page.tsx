@@ -11,7 +11,7 @@ import { buildUserCalculatorRecordsQuery } from '@/lib/firestore-queries';
 
 const AreaChartComponent = dynamic(() => import('@/components/charts/area-chart'), { 
   ssr: false, 
-  loading: () => <div className="h-[400px] w-full bg-zinc-50 rounded-2xl animate-pulse flex items-center justify-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Initialising Analytics...</div> 
+  loading: () => <div className="h-[400px] w-full bg-zinc-50 rounded-2xl animate-pulse flex items-center justify-center text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Initialising Analytics...</div> 
 });
 
 interface CalculatorRecord {
@@ -83,7 +83,7 @@ export default function ProgressPage() {
           <CardHeader className="p-12 border-b border-zinc-50 flex flex-row items-center justify-between">
             <div className="space-y-1">
               <CardTitle className="font-headline text-3xl tracking-tight">Carbon Evolution</CardTitle>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Kilograms CO2e Output per Audit</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500">Kilograms CO2e Output per Audit</p>
             </div>
             <Target className="h-8 w-8 text-primary/10 group-hover:text-primary/30 transition-colors" />
           </CardHeader>
@@ -91,11 +91,11 @@ export default function ProgressPage() {
             {!hasData ? (
               <div className="h-64 flex flex-col items-center justify-center text-center space-y-6 opacity-30 select-none">
                 <div className="p-6 bg-zinc-100 rounded-[2rem]">
-                  <TrendingDown className="h-16 w-16 text-zinc-300" />
+                  <TrendingDown className="h-16 w-16 text-zinc-500" />
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-black uppercase tracking-[0.3em]">No Telemetry Detected</p>
-                  <p className="text-sm max-w-[240px] leading-relaxed">Execute at least one impact audit to initialize trend analysis visualization.</p>
+                  <p className="text-sm max-w-[240px] leading-relaxed text-zinc-500">Execute at least one impact audit to initialize trend analysis visualization.</p>
                 </div>
               </div>
             ) : (
@@ -140,7 +140,7 @@ function GoalItem({ label, progress, completed }: GoalItemProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em]">
-        <span className={cn(completed ? "line-through text-zinc-400" : "text-zinc-600")}>{label}</span>
+        <span className={cn(completed ? "line-through text-zinc-500" : "text-zinc-600")}>{label}</span>
         <span className="text-primary">{completed ? "COMPLETE" : `${progress}%`}</span>
       </div>
       <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden shadow-inner">

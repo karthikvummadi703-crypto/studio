@@ -55,7 +55,7 @@ const MetricDisplay = memo(({ label, value, unit, color, isBadge }: MetricDispla
         <p className={cn("text-[10px] font-black tracking-widest uppercase", color)}>{value}</p>
       ) : (
         <p className={cn("text-3xl font-headline font-bold tabular-nums", color)}>
-          {value} <span className="text-[10px] font-black text-zinc-400 ml-1 uppercase">{unit}</span>
+          {value} <span className="text-[10px] font-black text-zinc-500 ml-1 uppercase">{unit}</span>
         </p>
       )}
     </div>
@@ -168,7 +168,7 @@ export default function CalculatorPage() {
             <div className="space-y-3">
               <Label htmlFor="origin-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Origin Point</Label>
               <div className="relative group">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-primary transition-colors" />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
                 <Input 
                   id="origin-input"
                   placeholder="Sync Origin" 
@@ -182,7 +182,7 @@ export default function CalculatorPage() {
             <div className="space-y-3">
               <Label htmlFor="destination-input" className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Destination Node</Label>
               <div className="relative group">
-                <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-primary transition-colors" />
+                <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-primary transition-colors" />
                 <Input 
                   id="destination-input"
                   placeholder="Sync Destination" 

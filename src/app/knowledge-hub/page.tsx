@@ -133,7 +133,7 @@ export default function KnowledgeHubPage() {
                     <div className="p-2.5 bg-zinc-50 border border-zinc-100 rounded-xl">
                       <topic.icon className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-400">
+                    <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
                       <Clock className="h-3 w-3" /> {topic.readTime}
                     </div>
                   </div>

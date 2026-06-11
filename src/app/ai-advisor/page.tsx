@@ -213,7 +213,7 @@ export default function AIAdvisorPage() {
                       : "hover:bg-primary/5 text-zinc-600 hover:text-primary"
                   )}
                 >
-                  <MessageSquare className={cn("h-4 w-4 mt-0.5 shrink-0", activeChatId === chat.id ? "text-primary-foreground" : "text-zinc-400 group-hover:text-primary")} />
+                  <MessageSquare className={cn("h-4 w-4 mt-0.5 shrink-0", activeChatId === chat.id ? "text-primary-foreground" : "text-zinc-500 group-hover:text-primary")} />
                   <div className="overflow-hidden">
                     <p className="text-[11px] font-bold truncate">{chat.title || 'Conversation'}</p>
                     <p className={cn("text-[9px] uppercase tracking-tighter mt-0.5 font-black", activeChatId === chat.id ? "text-primary-foreground/80" : "text-zinc-500")}>
@@ -279,7 +279,7 @@ export default function AIAdvisorPage() {
             ) : (
               <div className="space-y-8 max-w-4xl mx-auto" role="log" aria-live="polite" aria-label="Advisor conversation history">
                 {messages.length > VISIBLE_LIMIT && (
-                  <p className="text-center text-[10px] text-zinc-400 font-bold uppercase tracking-widest py-4">
+                  <p className="text-center text-[10px] text-zinc-500 font-bold uppercase tracking-widest py-4">
                     {messages.length - VISIBLE_LIMIT} earlier messages hidden
                   </p>
                 )}
