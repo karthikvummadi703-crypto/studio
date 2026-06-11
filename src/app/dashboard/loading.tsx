@@ -2,7 +2,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * High-performance skeleton loader for the Dashboard Strategy Node.
- * Ensures zero layout shift during environmental telemetry synchronization.
  */
 export default function DashboardLoading() {
   return (
