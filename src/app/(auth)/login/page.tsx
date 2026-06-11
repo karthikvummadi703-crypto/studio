@@ -22,6 +22,7 @@ import { Loader2, Leaf, Mail, Lock, Sparkles, FlaskConical } from 'lucide-react'
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS, APP_METADATA, DEMO_USER, IS_DEMO_KEY } from '@/lib/constants';
+import { getErrorMessage } from '@/lib/handle-error';
 
 /**
  * Login page with email/password, Google OAuth, Forgot Password link, and Demo Mode.
@@ -49,11 +50,11 @@ export default function LoginPage() {
       sessionStorage.removeItem(IS_DEMO_KEY);
       await setSessionCookie(userCredential.user);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Login Failed',
-        description: error.message || 'Invalid credentials.',
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
@@ -79,11 +80,11 @@ export default function LoginPage() {
       sessionStorage.removeItem(IS_DEMO_KEY);
       await setSessionCookie(user);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Google Login Failed',
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setGoogleLoading(false);
@@ -114,7 +115,7 @@ export default function LoginPage() {
       sessionStorage.setItem(IS_DEMO_KEY, 'true');
       await setSessionCookie(user);
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: 'destructive',
         title: 'Demo Access Failed',

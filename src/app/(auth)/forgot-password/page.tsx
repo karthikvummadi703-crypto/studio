@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
     try {
       await sendPasswordResetEmail(auth, trimmedEmail);
       setSent(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Always show success even on user-not-found to prevent email enumeration
       setSent(true);
     } finally {

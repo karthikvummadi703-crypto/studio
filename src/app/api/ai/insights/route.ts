@@ -1,6 +1,7 @@
 import { ai } from '@/ai/genkit';
 import { generateReductionPlanFlow } from '@/ai/flows/generate-reduction-plan';
 import { NextRequest } from 'next/server';
+import { getErrorMessage } from '@/lib/handle-error';
 
 // Sliding window rate limiter
 const rateLimitMap = new Map<string, number[]>();
@@ -63,9 +64,9 @@ export async function POST(req: NextRequest) {
         'X-Content-Type-Options': 'nosniff',
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[AI Insights Error]:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: getErrorMessage(error) }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
     });

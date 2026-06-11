@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { getLevelFromPoints } from '@/lib/levels';
 import { useAdvisorData } from '@/hooks/use-advisor-data';
 import { ChatMessage as IChatMessage, AIConversation } from '@/types';
+import { getErrorMessage } from '@/lib/handle-error';
 
 /**
  * Individual chat message bubble component.
@@ -161,8 +162,8 @@ export default function AIAdvisorPage() {
         updatedAt: serverTimestamp(),
       });
 
-    } catch (e: any) {
-      setError(e.message || 'AI service unavailable.');
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
       setStreamingText('');
@@ -293,7 +294,7 @@ export default function AIAdvisorPage() {
                     <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shrink-0">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
-                    <div className="p-6 rounded-[2rem] rounded-tl-none text-sm leading-relaxed max-w-[80%] shadow-sm border bg-primary/5 border-primary/10 text-foreground font-medium">
+                    <div className="p-6 rounded-[2rem] rounded-tl-none text-sm leading-relaxed max-w-[80%] shadow-sm border bg-primary/5 border-primary/10 text-foreground font-medium" >
                       {streamingText}
                     </div>
                   </div>

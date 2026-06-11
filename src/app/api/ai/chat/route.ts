@@ -1,6 +1,7 @@
 import { ai } from '@/ai/genkit';
 import { advisorPrompt, AIAdvisorChatInputSchema } from '@/ai/flows/ai-advisor-chat';
 import { NextRequest } from 'next/server';
+import { getErrorMessage } from '@/lib/handle-error';
 
 // Sliding window rate limiter
 const rateLimitMap = new Map<string, number[]>();
@@ -73,9 +74,9 @@ export async function POST(req: NextRequest) {
         'X-Content-Type-Options': 'nosniff'
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[AI Stream Route Error]:', error);
-    return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { 
+    return new Response(JSON.stringify({ error: getErrorMessage(error) }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

@@ -23,6 +23,7 @@ import { useUser, useFirestore, useDoc } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/types';
+import { getErrorMessage } from '@/lib/handle-error';
 
 const TRANSPORT_MODES = [
   { id: 'walking', label: 'Walking', icon: Footprints, co2PerKm: 0, points: 20 },
@@ -141,8 +142,12 @@ export default function CalculatorPage() {
       setActiveResult(null);
       setStart('');
       setDestination('');
-    } catch (e: any) {
-      toast({ title: "Sync Error", description: "Failed to finalize calculation node.", variant: "destructive" });
+    } catch (e: unknown) {
+      toast({ 
+        title: "Sync Error", 
+        description: getErrorMessage(e), 
+        variant: "destructive" 
+      });
     } finally {
       setSaving(false);
     }

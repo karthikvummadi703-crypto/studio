@@ -17,6 +17,7 @@ import { COLLECTIONS, IS_DEMO_KEY } from '@/lib/constants';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { getErrorMessage } from '@/lib/handle-error';
 
 /**
  * Registration page component for creating new environment nodes.
@@ -133,12 +134,12 @@ export default function RegisterPage() {
       
       toast({ title: "Node Registered", description: "Welcome to EcoPulse AI!" });
       router.push('/dashboard');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('[Register] Error:', error);
       toast({
         variant: "destructive",
         title: "Registration Failed",
-        description: error.message || "An unexpected error occurred.",
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
