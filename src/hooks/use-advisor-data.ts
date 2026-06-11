@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { 
   doc, 
   query, 
@@ -30,18 +30,23 @@ export function useAdvisorData(userId: string | undefined, db: Firestore | undef
     isLoading: true
   });
 
+  // Memoize the query to prevent unnecessary re-subscriptions
+  const historyQuery = useMemo(() => {
+    if (!userId || !db) return null;
+    return query(
+      collection(db, 'ai_conversations'),
+      where('userId', '==', userId),
+      orderBy('updatedAt', 'desc')
+    );
+  }, [userId, db]);
+
   useEffect(() => {
-    if (!userId || !db) {
+    if (!userId || !db || !historyQuery) {
       setData({ profile: null, chats: [], isLoading: false });
       return;
     }
 
     const profileRef = doc(db, 'users', userId);
-    const historyQuery = query(
-      collection(db, 'ai_conversations'),
-      where('userId', '==', userId),
-      orderBy('updatedAt', 'desc')
-    );
 
     let profileReady = false;
     let chatsReady = false;
@@ -69,7 +74,7 @@ export function useAdvisorData(userId: string | undefined, db: Firestore | undef
       profileUnsub();
       chatsUnsub();
     };
-  }, [userId, db]);
+  }, [userId, db, historyQuery]);
 
   return data;
 }
