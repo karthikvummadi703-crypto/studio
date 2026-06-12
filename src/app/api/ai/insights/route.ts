@@ -2,15 +2,14 @@ import { ai } from '@/ai/genkit';
 import { generateReductionPlanFlow } from '@/ai/flows/generate-reduction-plan';
 import { NextRequest } from 'next/server';
 import { getErrorMessage } from '@/lib/handle-error';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
-// Sliding window rate limiter
-const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_THRESHOLD = 10;
 const RATE_LIMIT_WINDOW = 60 * 1000;
 
 /**
  * Streaming API Route for AI Environmental Insights.
- * Protected with Bearer token check and rate limiting.
+ * Protected with Bearer token check and distributed rate limiting.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -22,21 +21,16 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Rate Limiting
-    const ip = req.headers.get('x-forwarded-for') || 'anonymous';
-    const now = Date.now();
-    const timestamps = rateLimitMap.get(ip) || [];
-    const validTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    // Distributed Rate Limiting via Firestore
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'anonymous';
+    const { allowed } = await checkRateLimit(ip, RATE_LIMIT_THRESHOLD, RATE_LIMIT_WINDOW);
 
-    if (validTimestamps.length >= RATE_LIMIT_THRESHOLD) {
+    if (!allowed) {
       return new Response(JSON.stringify({ error: 'Too many requests' }), {
         status: 429,
         headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
       });
     }
-
-    validTimestamps.push(now);
-    rateLimitMap.set(ip, validTimestamps);
 
     const input = await req.json();
 

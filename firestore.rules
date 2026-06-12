@@ -31,6 +31,12 @@ service cloud.firestore {
         && request.auth.uid == request.resource.data.userId;
     }
 
+    // Rate limits: allow get and write for server-side rate limiting
+    // Note: In a production app with Admin SDK, this would be restricted to admin only.
+    match /rate_limits/{ip} {
+      allow get, write: if true;
+    }
+
     // Deny everything else
     match /{document=**} {
       allow read, write: if false;

@@ -2,15 +2,14 @@ import { ai } from '@/ai/genkit';
 import { advisorPrompt, AIAdvisorChatInputSchema } from '@/ai/flows/ai-advisor-chat';
 import { NextRequest } from 'next/server';
 import { getErrorMessage } from '@/lib/handle-error';
+import { checkRateLimit } from '@/lib/rate-limiter';
 
-// Sliding window rate limiter
-const rateLimitMap = new Map<string, number[]>();
 const RATE_LIMIT_THRESHOLD = 15;
 const RATE_LIMIT_WINDOW = 60 * 1000;
 
 /**
  * Hardened Streaming API Route for AI Advisor.
- * Implements authentication token verification and rate limiting.
+ * Implements authentication token verification and distributed rate limiting.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -22,13 +21,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Rate Limiting
-    const ip = req.headers.get('x-forwarded-for') || req.ip || 'anonymous';
-    const now = Date.now();
-    const timestamps = rateLimitMap.get(ip) || [];
-    const validTimestamps = timestamps.filter(ts => now - ts < RATE_LIMIT_WINDOW);
+    // Distributed Rate Limiting via Firestore
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.ip || 'anonymous';
+    const { allowed } = await checkRateLimit(ip, RATE_LIMIT_THRESHOLD, RATE_LIMIT_WINDOW);
     
-    if (validTimestamps.length >= RATE_LIMIT_THRESHOLD) {
+    if (!allowed) {
       return new Response(JSON.stringify({ error: 'Too many requests' }), { 
         status: 429,
         headers: { 
@@ -37,14 +34,10 @@ export async function POST(req: NextRequest) {
         }
       });
     }
-    
-    validTimestamps.push(now);
-    rateLimitMap.set(ip, validTimestamps);
 
     const input = await req.json();
     const parsedInput = AIAdvisorChatInputSchema.parse(input);
 
-    // Correct Genkit 1.x streaming implementation
     const { stream } = ai.generateStream({
       prompt: advisorPrompt,
       input: parsedInput,
