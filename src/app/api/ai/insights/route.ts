@@ -45,12 +45,17 @@ export async function POST(req: NextRequest) {
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          if (chunk.output) {
-            controller.enqueue(encoder.encode(JSON.stringify(chunk.output)));
+        try {
+          for await (const chunk of stream) {
+            if (chunk.output) {
+              controller.enqueue(encoder.encode(JSON.stringify(chunk.output)));
+            }
           }
+        } catch (err) {
+          console.error('[Insights stream error]:', err);
+        } finally {
+          controller.close();
         }
-        controller.close();
       },
     });
 
