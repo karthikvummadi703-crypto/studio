@@ -2,6 +2,7 @@
 "use client";
 
 import { useMemo, memo } from 'react';
+import Image from 'next/image';
 import { useUser, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -23,6 +24,7 @@ import { CHALLENGES } from '@/lib/challenges';
 import { getLevelFromPoints } from '@/lib/levels';
 import { useDashboardData } from '@/hooks/use-dashboard-data';
 import type { UserProfile, CarbonRecord } from '@/types';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 interface HeroMetricProps {
   label: string;
@@ -33,7 +35,6 @@ interface HeroMetricProps {
   statusLabel?: string;
 }
 
-// Memoized Stat Component with accessibility focus
 const HeroMetric = memo(({ label, value, subValue, color, isSmall, statusLabel }: HeroMetricProps) => (
   <div className="space-y-1">
     <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">{label}</p>
@@ -150,7 +151,7 @@ export default function Dashboard() {
                 statusLabel="green points earned"
               />
               <HeroMetric label="Status" value={stats.level} color="text-foreground" isSmall />
-              <HeroMetric label="Latest Audit" value={stats.latestCO2.toFixed(1)} subValue="KG" color="text-zinc-600" />
+              <HeroMetric label="Latest Audit" value={stats.latestCO2.toFixed(1)} subValue="KG" color="text-zinc-500" />
             </div>
           </div>
 
@@ -181,7 +182,7 @@ export default function Dashboard() {
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <Badge className="bg-primary text-white text-[9px] font-black tracking-[0.2em] uppercase mb-2">Priority Task</Badge>
-                      <CardTitle className="text-2xl font-headline font-bold">{activeChallenge.title}</CardTitle>
+                      <CardTitle className="text-2xl font-headline font-bold text-foreground">{activeChallenge.title}</CardTitle>
                     </div>
                     <div className="text-right">
                       <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Incentive</p>
@@ -190,7 +191,7 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 space-y-6">
-                  <p className="text-muted-foreground text-sm leading-relaxed">{activeChallenge.description}</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed font-medium">{activeChallenge.description}</p>
                   <div className="space-y-3">
                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                       <span>Sync Progress: 0%</span>
@@ -208,8 +209,8 @@ export default function Dashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
                  <div className="p-4 bg-primary/10 rounded-full"><CheckCircle2 className="h-8 w-8 text-primary" /></div>
-                 <h3 className="text-xl font-headline font-bold">All Goals Completed</h3>
-                 <p className="text-muted-foreground text-sm">Synchronizing new environment tasks shortly.</p>
+                 <h3 className="text-xl font-headline font-bold text-foreground">All Goals Completed</h3>
+                 <p className="text-muted-foreground text-sm font-medium">Synchronizing new environment tasks shortly.</p>
               </div>
             )}
           </Card>
@@ -237,23 +238,40 @@ export default function Dashboard() {
 }
 
 function EmptyState() {
+  const heroImage = PlaceHolderImages.find(img => img.id === 'dashboard-hero');
   return (
-    <Card className="bg-white border-zinc-100 rounded-[2.5rem] p-12 text-center space-y-8 shadow-sm">
-      <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto ring-8 ring-primary/5">
-        <Sparkles className="h-10 w-10 text-primary animate-pulse" />
+    <Card className="bg-white border-zinc-100 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col md:flex-row min-h-[400px]">
+      <div className="relative w-full md:w-1/2 min-h-[300px]">
+        {heroImage && (
+          <Image 
+            src={heroImage.imageUrl}
+            alt={heroImage.description}
+            fill
+            priority
+            className="object-cover"
+            data-ai-hint={heroImage.imageHint}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent hidden md:block" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white md:hidden" />
       </div>
-      <div className="space-y-3">
-        <h2 className="text-3xl font-headline font-bold text-foreground tracking-tight">Environmental Node Initialized</h2>
-        <p className="text-muted-foreground max-w-md mx-auto text-sm leading-relaxed">
-          Your sustainability telemetry is currently at zero. Complete an impact audit to unlock AI reduction strategies and start earning green points.
-        </p>
-      </div>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-        <Link href="/calculator">
-          <Button size="lg" className="h-14 px-10 bg-primary text-primary-foreground font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 transition-all">
-            Start First Audit
-          </Button>
-        </Link>
+      <div className="w-full md:w-1/2 p-12 flex flex-col items-center justify-center text-center space-y-8 bg-white relative z-10">
+        <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mx-auto ring-8 ring-primary/5">
+          <Sparkles className="h-10 w-10 text-primary animate-pulse" />
+        </div>
+        <div className="space-y-3">
+          <h2 className="text-3xl font-headline font-bold text-foreground tracking-tight">Environmental Node Initialized</h2>
+          <p className="text-muted-foreground max-w-sm mx-auto text-sm leading-relaxed font-medium">
+            Your sustainability telemetry is currently at zero. Complete an impact audit to unlock AI reduction strategies and start earning green points.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+          <Link href="/calculator">
+            <Button size="lg" className="h-14 px-10 bg-primary text-primary-foreground font-bold rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 transition-all">
+              Start First Audit
+            </Button>
+          </Link>
+        </div>
       </div>
     </Card>
   );

@@ -2,10 +2,40 @@
 {
   "placeholderImages": [
     {
-      "id": "eco-vibrant-valley",
-      "description": "Vibrant lush green valley with wild flowers and blue sky",
-      "imageUrl": "https://picsum.photos/seed/ecopulse-vibrant-bloom/1920/1080",
-      "imageHint": "vibrant lush valley flowers"
+      "id": "topic-basics",
+      "description": "Earth from space showing fragile atmosphere",
+      "imageUrl": "https://picsum.photos/seed/basics/600/400",
+      "imageHint": "earth space atmosphere"
+    },
+    {
+      "id": "topic-science",
+      "description": "Glacier melting in a blue ocean",
+      "imageUrl": "https://picsum.photos/seed/science/600/400",
+      "imageHint": "glacier melting ocean"
+    },
+    {
+      "id": "topic-lifestyle",
+      "description": "Sustainable gardening and fresh vegetables",
+      "imageUrl": "https://picsum.photos/seed/lifestyle/600/400",
+      "imageHint": "sustainable garden vegetables"
+    },
+    {
+      "id": "topic-energy",
+      "description": "Wind turbines on a green hill at sunset",
+      "imageUrl": "https://picsum.photos/seed/energy/600/400",
+      "imageHint": "wind turbines sunset"
+    },
+    {
+      "id": "topic-waste",
+      "description": "Close up of recycling symbols on bins",
+      "imageUrl": "https://picsum.photos/seed/waste/600/400",
+      "imageHint": "recycling bins waste"
+    },
+    {
+      "id": "dashboard-hero",
+      "description": "Lush tropical forest with sunlight filtering through leaves",
+      "imageUrl": "https://picsum.photos/seed/hero/1200/600",
+      "imageHint": "tropical forest sunlight"
     }
   ]
 }
