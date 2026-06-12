@@ -1,5 +1,4 @@
-import { ai } from '@/ai/genkit';
-import { generateReductionPlanFlow } from '@/ai/flows/generate-reduction-plan';
+import { reductionPlanPrompt, GenerateReductionPlanInputSchema } from '@/ai/flows/generate-reduction-plan';
 import { NextRequest } from 'next/server';
 import { getErrorMessage } from '@/lib/handle-error';
 import { checkRateLimit } from '@/lib/rate-limiter';
@@ -22,7 +21,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Distributed Rate Limiting via Firestore
-    // Using a robust header-based IP extraction to avoid TypeScript 'ip' property errors
     const forwarded = req.headers.get('x-forwarded-for');
     const ip = (forwarded ? forwarded.split(',')[0] : req.headers.get('x-real-ip')) || 'anonymous';
 
@@ -36,17 +34,17 @@ export async function POST(req: NextRequest) {
     }
 
     const input = await req.json();
+    const parsedInput = GenerateReductionPlanInputSchema.parse(input);
 
-    const { stream } = ai.generateStream({
-      flow: generateReductionPlanFlow,
-      input,
-    });
+    // Use the .stream() method of the executable prompt for Genkit 1.x
+    const { stream } = reductionPlanPrompt.stream(parsedInput);
 
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({
       async start(controller) {
         try {
           for await (const chunk of stream) {
+            // chunk.output contains the partial Zod object being streamed
             if (chunk.output) {
               controller.enqueue(encoder.encode(JSON.stringify(chunk.output)));
             }

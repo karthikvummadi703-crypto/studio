@@ -1,4 +1,3 @@
-import { ai } from '@/ai/genkit';
 import { advisorPrompt, AIAdvisorChatInputSchema } from '@/ai/flows/ai-advisor-chat';
 import { NextRequest } from 'next/server';
 import { getErrorMessage } from '@/lib/handle-error';
@@ -22,7 +21,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Distributed Rate Limiting via Firestore
-    // Using a robust header-based IP extraction to avoid TypeScript 'ip' property errors
     const forwarded = req.headers.get('x-forwarded-for');
     const ip = (forwarded ? forwarded.split(',')[0] : req.headers.get('x-real-ip')) || 'anonymous';
     
@@ -41,10 +39,8 @@ export async function POST(req: NextRequest) {
     const input = await req.json();
     const parsedInput = AIAdvisorChatInputSchema.parse(input);
 
-    const { stream } = ai.generateStream({
-      prompt: advisorPrompt,
-      input: parsedInput,
-    });
+    // In Genkit 1.x, to stream from an executable prompt, call .stream() on the prompt object
+    const { stream } = advisorPrompt.stream(parsedInput);
 
     const encoder = new TextEncoder();
     const readableStream = new ReadableStream({

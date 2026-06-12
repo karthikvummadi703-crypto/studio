@@ -21,11 +21,11 @@ const RecommendationSchema = z.object({
     ),
 });
 
-const GenerateReductionPlanInputSchema = z.object({
+export const GenerateReductionPlanInputSchema = z.object({
   totalEmissions: z
     .number()
     .nonnegative()
-    .describe('The user\u0027s total estimated carbon emissions in kgCO2e.'),
+    .describe('The user\'s total estimated carbon emissions in kgCO2e.'),
   emissionsBreakdown: z
     .object({
       transportation: z
@@ -56,7 +56,7 @@ const GenerateReductionPlanOutputSchema = z.object({
   personalizedAnalysis: z
     .string()
     .describe(
-      'A detailed explanation of the user\u0027s current footprint and main emission sources.'
+      'A detailed explanation of the user\'s current footprint and main emission sources.'
     ),
   weeklyActionPlan: z
     .string()
@@ -85,7 +85,7 @@ export type GenerateReductionPlanOutput = z.infer<
 /**
  * Prompt for carbon reduction plan generation.
  */
-const reductionPlanPrompt = ai.definePrompt({
+export const reductionPlanPrompt = ai.definePrompt({
   name: 'reductionPlanPrompt',
   input: { schema: GenerateReductionPlanInputSchema },
   output: { schema: GenerateReductionPlanOutputSchema },
