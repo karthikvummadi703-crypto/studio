@@ -10,10 +10,13 @@ EcoPulse AI is a high-performance carbon footprint tracking platform and AI-driv
 - **Impact Analytics:** Visual tracking of carbon evolution over time.
 - **Gamified Progress:** Earn Green Points and level up your environmental status.
 
-## Easiest Deployment (Recommended: Vercel)
+## Deployment Guide
 
-1. **Connect GitHub:** Link your repository to [Vercel](https://vercel.com).
-2. **Set Environment Variables:** Add the following keys in the Vercel Dashboard:
+### Option 1: Vercel (Easiest)
+
+1. **GitHub Import:** Go to [Vercel](https://vercel.com/new) and select your repository.
+   - *Troubleshooting:* If you can't see your repo, click "Adjust GitHub App Permissions" in the Vercel import screen to grant access.
+2. **Environment Variables:** Add the following keys in the Vercel Dashboard:
    - `NEXT_PUBLIC_FIREBASE_API_KEY`
    - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
    - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
@@ -21,14 +24,31 @@ EcoPulse AI is a high-performance carbon footprint tracking platform and AI-driv
    - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
    - `NEXT_PUBLIC_FIREBASE_APP_ID`
    - `GOOGLE_GENAI_API_KEY` (Get from [Google AI Studio](https://aistudio.google.com/))
-3. **Deploy:** Vercel will automatically detect Next.js and deploy.
+3. **Deploy:** Click "Deploy".
 
-## Alternative: Firebase App Hosting
+### Option 2: Vercel CLI (If Browser Import Fails)
+
+If the browser UI is stuck, you can deploy directly from your terminal:
+
+```bash
+# 1. Install Vercel CLI
+npm i -g vercel
+
+# 2. Login
+vercel login
+
+# 3. Deploy
+vercel
+```
+
+Follow the prompts to link the project and set your environment variables when asked or via the Vercel dashboard after the first push.
+
+### Option 3: Firebase App Hosting
 
 1. Go to the [Firebase Console](https://console.firebase.google.com/).
 2. Select **App Hosting** from the sidebar.
 3. Connect your GitHub repository.
-4. Set the same Environment Variables as above in the "Secrets" or "Environment Variables" section.
+4. Set the environment variables in the Firebase Console.
 
 ## Local Development
 
