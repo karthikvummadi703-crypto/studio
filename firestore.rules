@@ -2,42 +2,67 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users can only read and write their own profile
+    // ── Helper functions ──────────────────────────────────────────────────
+
+    /** Caller is authenticated. */
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    /** Caller owns this document via the given uid field. */
+    function isOwner(field) {
+      return isAuth() && request.auth.uid == resource.data[field];
+    }
+
+    /** Caller is creating a document they will own. */
+    function isCreatingOwn(field) {
+      return isAuth() && request.auth.uid == request.resource.data[field];
+    }
+
+    /** The ownership field has not been changed in an update. */
+    function ownerUnchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    // ── Collections ───────────────────────────────────────────────────────
+
+    // Users — own profile only; deletes are server-side only.
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read:   if isAuth() && request.auth.uid == userId;
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow update: if isAuth() && request.auth.uid == userId;
+      allow delete: if false;
     }
 
-    // Calculator records: owner only
+    // Calculator records — owner only; userId field is immutable after create.
     match /calculator_records/{recordId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
+      allow read:   if isOwner('userId');
+      allow create: if isCreatingOwn('userId');
+      allow update: if isOwner('userId') && ownerUnchanged('userId');
+      allow delete: if isOwner('userId');
     }
 
-    // Activities: owner only
+    // Activities — append-only log; no client updates or deletes.
     match /activities/{activityId} {
-      allow read: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
+      allow read:          if isOwner('userId');
+      allow create:        if isCreatingOwn('userId');
+      allow update, delete: if false;
     }
 
-    // AI conversations: owner only
+    // AI conversations — owner only; userId immutable.
     match /ai_conversations/{chatId} {
-      allow read, write: if request.auth != null
-        && request.auth.uid == resource.data.userId;
-      allow create: if request.auth != null
-        && request.auth.uid == request.resource.data.userId;
+      allow read:   if isOwner('userId');
+      allow create: if isCreatingOwn('userId');
+      allow update: if isOwner('userId') && ownerUnchanged('userId');
+      allow delete: if isOwner('userId');
     }
 
-    // Rate limits: NO client access — managed exclusively by server-side Admin SDK.
-    // Allowing client writes here would let anyone bypass or corrupt rate limiting.
+    // Rate limits — NO client access. Server-side SDK only.
     match /rate_limits/{ip} {
       allow read, write: if false;
     }
 
-    // Deny everything else
+    // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;
     }
