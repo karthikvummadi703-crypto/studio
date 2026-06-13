@@ -1,15 +1,12 @@
 /**
- * @fileOverview POST /api/ai/chat
+ * @fileOverview POST /api/ai/insights
  *
- * Streaming AI advisor endpoint. Responses are streamed token-by-token so the
- * client can render them progressively without waiting for the full completion.
- *
- * Auth:      Bearer token required (presence check — full JWT verification via
- *            Firebase identitytoolkit happens inside verifyIdToken).
- * Rate limit: 15 requests / 60 s per IP via Firestore.
+ * Returns a full AI-generated carbon reduction plan as JSON.
+ * Auth:       Bearer token required.
+ * Rate limit: 10 requests / 60 s per IP.
  */
 
-import { advisorPrompt, AIAdvisorChatInputSchema } from '@/ai/flows/ai-advisor-chat';
+import { reductionPlanPrompt, GenerateReductionPlanInputSchema } from '@/ai/flows/generate-reduction-plan';
 import { NextRequest } from 'next/server';
 import { getErrorMessage } from '@/lib/handle-error';
 import { checkRateLimit } from '@/lib/rate-limiter';
@@ -18,7 +15,7 @@ import { logger } from '@/lib/logger';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const RATE_LIMIT_THRESHOLD = 15;
+const RATE_LIMIT_THRESHOLD = 10;
 const RATE_LIMIT_WINDOW = 60 * 1000;
 
 export async function POST(req: NextRequest): Promise<Response> {
@@ -44,10 +41,10 @@ export async function POST(req: NextRequest): Promise<Response> {
   }
 
   // ── 3. Parse & validate input ──────────────────────────────────────────────
-  let parsedInput: ReturnType<typeof AIAdvisorChatInputSchema.parse>;
+  let parsedInput: ReturnType<typeof GenerateReductionPlanInputSchema.parse>;
   try {
     const body = await req.json();
-    parsedInput = AIAdvisorChatInputSchema.parse(body);
+    parsedInput = GenerateReductionPlanInputSchema.parse(body);
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Invalid request body.' }), {
       status: 400,
@@ -55,42 +52,26 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  // ── 4. Stream AI response ──────────────────────────────────────────────────
-  const encoder = new TextEncoder();
+  // ── 4. Generate & return insights ──────────────────────────────────────────
+  try {
+    const response = await reductionPlanPrompt(parsedInput);
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      try {
-        const response = await advisorPrompt(parsedInput);
+    if (!response?.output) {
+      throw new Error('AI failed to generate insights — empty output.');
+    }
 
-        if (!response?.output?.responseText) {
-          controller.enqueue(encoder.encode('I was unable to generate a response. Please try again.'));
-          controller.close();
-          return;
-        }
-
-        // Stream word-by-word for a natural typewriter effect.
-        const words = response.output.responseText.split(' ');
-        for (const word of words) {
-          controller.enqueue(encoder.encode(word + ' '));
-          // Yield to the event loop between chunks.
-          await new Promise((r) => setTimeout(r, 0));
-        }
-        controller.close();
-      } catch (error) {
-        logger.error('[AI Chat Stream Error]:', error);
-        controller.enqueue(encoder.encode(`Error: ${getErrorMessage(error)}`));
-        controller.close();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'no-store',
-      'Transfer-Encoding': 'chunked',
-    },
-  });
+    return new Response(JSON.stringify(response.output), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'X-Content-Type-Options': 'nosniff',
+        'Cache-Control': 'no-store',
+      },
+    });
+  } catch (error) {
+    logger.error('[AI Insights Error]:', error);
+    return new Response(JSON.stringify({ error: getErrorMessage(error) }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
