@@ -29,6 +29,12 @@ const consecutiveErrors = new Map<string, number>();
  * @param windowMs - Window duration in milliseconds.
  * @returns          { allowed: true } if the request may proceed.
  */
+/**
+ * @param key - Composite rate-limit key, e.g. `${uid}:${ip}`. Using uid
+ *              prevents distributing abuse across IPs; including the IP
+ *              prevents a leaked token from being widely shared without
+ *              granular limiting.
+ */
 export async function checkRateLimit(
   ip: string,
   limit: number,
