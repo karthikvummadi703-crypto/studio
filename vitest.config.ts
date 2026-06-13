@@ -20,13 +20,18 @@ export default defineConfig({
         'src/app/layout.tsx',
       ],
       thresholds: {
-        lines: 70,
-        functions: 70,
-        branches: 60,
-        statements: 70,
+        lines:      80,
+        functions:  80,
+        branches:   75,
+        statements: 80,
       },
     },
-    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx', 'src/**/*.test.ts', 'src/**/*.test.tsx'],
+    include: [
+      'tests/**/*.test.ts',
+      'tests/**/*.test.tsx',
+      'src/**/*.test.ts',
+      'src/**/*.test.tsx',
+    ],
     exclude: ['node_modules', '.next'],
   },
   resolve: {
