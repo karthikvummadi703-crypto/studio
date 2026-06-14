@@ -1,0 +1,19 @@
+{
+  "name": "EcoPulse AI",
+  "short_name": "EcoPulse",
+  "description": "AI-driven carbon footprint tracker and sustainability advisor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["lifestyle", "productivity"],
+  "lang": "en-US"
+}
