@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
-
-// ── Browser API stubs ────────────────────────────────────────────────────────
+import React from 'react';
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
@@ -29,25 +28,6 @@ global.IntersectionObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// ── Next.js stubs ────────────────────────────────────────────────────────────
-
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push:     vi.fn(),
-    replace:  vi.fn(),
-    prefetch: vi.fn(),
-    back:     vi.fn(),
-  }),
-  usePathname:    () => '/',
-  useSearchParams: () => new URLSearchParams(),
-}));
-
-vi.mock('next/dynamic', () => ({
-  default: (fn: () => Promise<{ default: unknown }>) => fn,
-}));
-
-// ── Firebase stubs ───────────────────────────────────────────────────────────
-
 vi.mock('@/firebase/config', () => ({
   app:  {},
   auth: { currentUser: null },
@@ -62,11 +42,15 @@ vi.mock('firebase/auth', () => ({
   signOut:                        vi.fn(),
   updateProfile:                  vi.fn(),
   sendPasswordResetEmail:         vi.fn(),
-  onAuthStateChanged:             vi.fn((_auth: unknown, cb: (u: null) => void) => { cb(null); return vi.fn(); }),
-  GoogleAuthProvider:             vi.fn(),
-  getAuth:                        vi.fn(),
+  onAuthStateChanged: vi.fn((_auth: unknown, cb: (u: null) => void) => {
+    cb(null);
+    return vi.fn();
+  }),
+  GoogleAuthProvider: vi.fn(),
+  getAuth:            vi.fn(),
   FirebaseError: class FirebaseError extends Error {
-    constructor(public code: string, message: string) { super(message); }
+    code: string;
+    constructor(code: string, message: string) { super(message); this.code = code; }
   },
 }));
 
@@ -76,6 +60,7 @@ vi.mock('firebase/firestore', () => ({
   addDoc:          vi.fn().mockResolvedValue({ id: 'mock-id' }),
   updateDoc:       vi.fn().mockResolvedValue(undefined),
   deleteDoc:       vi.fn().mockResolvedValue(undefined),
+  getDocs:         vi.fn().mockResolvedValue({ docs: [] }),
   getFirestore:    vi.fn(),
   collection:      vi.fn(),
   serverTimestamp: vi.fn(() => new Date()),
@@ -84,7 +69,7 @@ vi.mock('firebase/firestore', () => ({
   where:           vi.fn(),
   orderBy:         vi.fn(),
   limit:           vi.fn(),
-  writeBatch:      vi.fn(() => ({
+  writeBatch: vi.fn(() => ({
     set:    vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
@@ -99,9 +84,18 @@ vi.mock('@/firebase', () => ({
   useFirestore:  () => ({}),
   useDoc:        () => ({ data: null, isLoading: false, error: null }),
   useCollection: () => ({ data: [], isLoading: false, error: null }),
-  useFirebase:   () => ({ profile: null, isProfileLoading: false }),
   useAuth:       () => ({}),
-  auth:          {},
-  db:            {},
+  auth: {},
+  db:   {},
   FirebaseClientProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+vi.mock('wouter', () => ({
+  useLocation: () => ['/', vi.fn()],
+  useRoute:    () => [false, {}],
+  Link:        ({ children, href }: { children: React.ReactNode; href: string }) =>
+    React.createElement('a', { href }, children),
+  Route:  ({ children }: { children: React.ReactNode }) => children,
+  Switch: ({ children }: { children: React.ReactNode }) => children,
+  Router: ({ children }: { children: React.ReactNode }) => children,
 }));
