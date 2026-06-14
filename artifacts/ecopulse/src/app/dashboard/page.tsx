@@ -241,13 +241,12 @@ function EmptyState() {
     <Card className="bg-white border-zinc-100 rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col md:flex-row min-h-[400px]">
       <div className="relative w-full md:w-1/2 min-h-[300px]">
         {heroImage && (
-          <Image 
+          <img
             src={heroImage.imageUrl}
             alt={heroImage.description}
-            fill
-            priority
-            className="object-cover"
+            className="object-cover absolute inset-0 w-full h-full"
             data-ai-hint={heroImage.imageHint}
+            loading="eager"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-white via-white/40 to-transparent hidden md:block" />

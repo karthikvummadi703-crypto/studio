@@ -43,7 +43,7 @@ export default function RegisterPage() {
     if (!authLoading && user) {
       navigate('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, navigate]);
 
   /**
    * Sets the session cookie via server action.
@@ -153,7 +153,7 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
-  }, [fullName, email, password, validateInput, router, toast, handleSession]);
+  }, [fullName, email, password, validateInput, navigate, toast, handleSession]);
 
   if (authLoading) {
     return (

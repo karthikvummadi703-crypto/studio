@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
     if (!authLoading && user) {
       navigate('/dashboard');
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, navigate]);
 
   const handleReset = useCallback(async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();

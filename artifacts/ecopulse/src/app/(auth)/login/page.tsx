@@ -64,7 +64,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  }, [email, password, router, toast, handleSession]);
+  }, [email, password, navigate, toast, handleSession]);
 
   const handleGoogleLogin = useCallback(async (): Promise<void> => {
     setGoogleLoading(true);
@@ -110,7 +110,7 @@ export default function LoginPage() {
     } finally {
       setGoogleLoading(false);
     }
-  }, [router, toast, handleSession]);
+  }, [navigate, toast, handleSession]);
 
   const handleDemoMode = useCallback(async (): Promise<void> => {
     setDemoLoading(true);
@@ -154,7 +154,7 @@ export default function LoginPage() {
     } finally {
       setDemoLoading(false);
     }
-  }, [router, toast, handleSession]);
+  }, [navigate, toast, handleSession]);
 
   const anyLoading = loading || googleLoading || demoLoading;
 

@@ -55,7 +55,7 @@ export default function ProfilePage() {
     await clearSessionCookieAction();
     await signOut(auth);
     navigate('/login');
-  }, [auth, router]);
+  }, [auth, navigate]);
 
   const level = useMemo(() => getLevelFromPoints(profile?.greenPoints || 0), [profile?.greenPoints]);
 
