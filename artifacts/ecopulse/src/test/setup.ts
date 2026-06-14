@@ -80,11 +80,11 @@ vi.mock('firebase/firestore', () => ({
 }));
 
 vi.mock('@/firebase', () => ({
-  useUser:       () => ({ user: null, isLoading: false, isDemo: false }),
-  useFirestore:  () => ({}),
-  useDoc:        () => ({ data: null, isLoading: false, error: null }),
-  useCollection: () => ({ data: [], isLoading: false, error: null }),
-  useAuth:       () => ({}),
+  useUser:       vi.fn(() => ({ user: null, isLoading: false, isDemo: false })),
+  useFirestore:  vi.fn(() => ({})),
+  useDoc:        vi.fn(() => ({ data: null, isLoading: false, error: null })),
+  useCollection: vi.fn(() => ({ data: [], isLoading: false, error: null })),
+  useAuth:       vi.fn(() => ({})),
   auth: {},
   db:   {},
   FirebaseClientProvider: ({ children }: { children: React.ReactNode }) => children,

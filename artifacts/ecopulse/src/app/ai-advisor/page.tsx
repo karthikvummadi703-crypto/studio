@@ -1,5 +1,4 @@
 
-"use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import { useUser, useFirestore } from '@/firebase';

@@ -1,4 +1,3 @@
-"use client";
 
 import { Send } from 'lucide-react';
 import { Button, Input, Spinner } from '@/components/ui';

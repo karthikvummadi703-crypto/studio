@@ -1,4 +1,3 @@
-"use client";
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, X, Minimize2, Maximize2, ExternalLink } from 'lucide-react';

@@ -1,6 +1,6 @@
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { FirebaseClientProvider } from "@/firebase";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +26,30 @@ const ForgotPasswordPage = lazy(() => import("@/app/(auth)/forgot-password/page"
 
 const queryClient = new QueryClient();
 
+const ROUTE_TITLES: Record<string, string> = {
+  "/": "EcoPulse AI",
+  "/login": "Sign In — EcoPulse AI",
+  "/register": "Create Account — EcoPulse AI",
+  "/forgot-password": "Reset Password — EcoPulse AI",
+  "/dashboard": "Dashboard — EcoPulse AI",
+  "/ai-advisor": "AI Advisor — EcoPulse AI",
+  "/calculator": "Carbon Calculator — EcoPulse AI",
+  "/insights": "Insights — EcoPulse AI",
+  "/knowledge-hub": "Knowledge Hub — EcoPulse AI",
+  "/recommendations": "Recommendations — EcoPulse AI",
+  "/progress": "Progress — EcoPulse AI",
+  "/profile": "Profile — EcoPulse AI",
+  "/settings": "Settings — EcoPulse AI",
+};
+
+function PageTitle() {
+  const [location] = useLocation();
+  useEffect(() => {
+    document.title = ROUTE_TITLES[location] ?? "EcoPulse AI";
+  }, [location]);
+  return null;
+}
+
 function PageLoader() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]" role="status" aria-live="polite">
@@ -42,7 +66,6 @@ function PageLoader() {
 
 function RootRedirect() {
   const { user, isLoading } = useUser();
-  const [, navigate] = useLocation();
 
   if (isLoading) return <PageLoader />;
 
@@ -52,6 +75,7 @@ function RootRedirect() {
 function Router() {
   return (
     <GlobalNavigation>
+      <PageTitle />
       <Suspense fallback={<PageLoader />}>
         <Switch>
           <Route path="/" component={RootRedirect} />

@@ -1,5 +1,4 @@
 
-"use client";
 
 import { useMemo, lazy } from 'react';
 import { useUser, useFirestore, useCollection } from '@/firebase';
