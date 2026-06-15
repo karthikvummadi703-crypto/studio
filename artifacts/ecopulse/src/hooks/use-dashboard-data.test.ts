@@ -1,6 +1,3 @@
-
-'use client';
-
 import { renderHook } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { useDashboardData } from './use-dashboard-data';
@@ -18,19 +15,16 @@ describe('useDashboardData', () => {
     const mockActivities = [{ id: 'act1', type: 'milestone', description: 'Joined' }];
     const mockRecords = [{ id: 'rec1', co2: 5.5, mode: 'car' }];
 
-    (firebaseHooks.useFirebase as any).mockReturnValue({
+    vi.mocked(firebaseHooks.useFirebase as () => unknown).mockReturnValue({
       profile: mockProfile,
       isProfileLoading: false,
     });
 
-    (firebaseHooks.useCollection as any).mockImplementation((query: any) => {
-      if (query && query.path?.includes('activities')) {
-        return { data: mockActivities, isLoading: false };
-      }
-      return { data: mockRecords, isLoading: false };
-    });
+    vi.mocked(firebaseHooks.useCollection as (q: unknown) => unknown)
+      .mockReturnValueOnce({ data: mockActivities, isLoading: false })
+      .mockReturnValueOnce({ data: mockRecords, isLoading: false });
 
-    const { result } = renderHook(() => useDashboardData('123', {} as any));
+    const { result } = renderHook(() => useDashboardData('123', {} as never));
 
     expect(result.current.profile).toEqual(mockProfile);
     expect(result.current.activities).toEqual(mockActivities);
@@ -39,17 +33,17 @@ describe('useDashboardData', () => {
   });
 
   it('indicates loading if any dependency is still loading', () => {
-    (firebaseHooks.useFirebase as any).mockReturnValue({
+    vi.mocked(firebaseHooks.useFirebase as () => unknown).mockReturnValue({
       profile: null,
       isProfileLoading: true,
     });
 
-    (firebaseHooks.useCollection as any).mockReturnValue({
+    vi.mocked(firebaseHooks.useCollection as (q: unknown) => unknown).mockReturnValue({
       data: [],
       isLoading: false,
     });
 
-    const { result } = renderHook(() => useDashboardData('123', {} as any));
+    const { result } = renderHook(() => useDashboardData('123', {} as never));
 
     expect(result.current.isLoading).toBe(true);
   });

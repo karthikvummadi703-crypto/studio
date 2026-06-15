@@ -1,7 +1,18 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
 import ForgotPasswordPage from '../forgot-password/page';
+import { Toaster } from '@/components/ui/toaster';
 import * as firebaseAuth from 'firebase/auth';
+
+function renderForgotPassword() {
+  return render(
+    <>
+      <ForgotPasswordPage />
+      <Toaster />
+    </>,
+  );
+}
 
 describe('ForgotPasswordPage', () => {
   beforeEach(() => {
@@ -67,7 +78,7 @@ describe('ForgotPasswordPage', () => {
   });
 
   it('shows error toast for invalid email format', async () => {
-    render(<ForgotPasswordPage />);
+    renderForgotPassword();
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'not-an-email' },
     });

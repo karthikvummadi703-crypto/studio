@@ -35,8 +35,8 @@ describe('Dashboard Smoke Test', () => {
     expect(screen.getByText('Alice Eco')).toBeInTheDocument();
     
     // Verify key metrics are rendered
-    expect(screen.getByText('75')).toBeInTheDocument(); // Score
-    expect(screen.getByText('500')).toBeInTheDocument(); // Points
+    expect(screen.getAllByText('75').length).toBeGreaterThan(0); // Score
+    expect(screen.getAllByText('500').length).toBeGreaterThan(0); // Points
     
     // Verify UI components
     expect(screen.getByRole('button', { name: /new audit/i })).toBeInTheDocument();

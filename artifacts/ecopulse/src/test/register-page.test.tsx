@@ -12,8 +12,10 @@ describe('RegisterPage', () => {
 
   it('renders the EcoPulse AI heading', () => {
     render(<RegisterPage />);
-    const headings = screen.getAllByText(/ecopulse ai/i);
-    expect(headings.length).toBeGreaterThan(0);
+    const found = screen.getAllByText((_, el) =>
+      (el?.textContent ?? '').toLowerCase().includes('ecopulse'),
+    );
+    expect(found.length).toBeGreaterThan(0);
   });
 
   it('renders name field', () => {

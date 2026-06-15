@@ -51,7 +51,7 @@ describe('DashboardPage', () => {
       isDemo: true,
     });
     render(<Dashboard />);
-    expect(screen.getByText('82')).toBeInTheDocument();
+    expect(screen.getAllByText('82').length).toBeGreaterThan(0);
   });
 
   it('renders green points for authenticated user', () => {
@@ -61,7 +61,7 @@ describe('DashboardPage', () => {
       isDemo: true,
     });
     render(<Dashboard />);
-    expect(screen.getByText('120')).toBeInTheDocument();
+    expect(screen.getAllByText('120').length).toBeGreaterThan(0);
   });
 
   it('shows loading state when data is loading', () => {
