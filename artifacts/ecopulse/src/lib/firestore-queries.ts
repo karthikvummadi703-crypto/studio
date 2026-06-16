@@ -2,7 +2,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   limit,
   Firestore,
   Query,
@@ -14,6 +13,7 @@ import { COLLECTIONS } from './constants';
 /**
  * Factory for user conversation queries.
  * Capped at 50 to prevent unbounded Firestore reads.
+ * Sorted client-side to avoid composite index on userId + updatedAt.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
  */
@@ -21,17 +21,16 @@ export function buildUserConversationsQuery(db: Firestore, userId: string): Quer
   return query(
     collection(db, COLLECTIONS.AI_CONVERSATIONS),
     where('userId', '==', userId),
-    orderBy('updatedAt', 'desc'),
     limit(50)
   );
 }
 
 /**
  * Factory for user activity log queries.
- * Uses client-side sorting to avoid composite index requirements.
+ * Sorted client-side to avoid composite index on userId + timestamp.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
- * @param limitCount Optional limit for the query (applied client-side).
+ * @param limitCount Approximate upper bound (over-fetches then slices client-side).
  */
 export function buildUserActivitiesQuery(db: Firestore, userId: string, limitCount = 5): Query<DocumentData> {
   return query(
@@ -43,10 +42,10 @@ export function buildUserActivitiesQuery(db: Firestore, userId: string, limitCou
 
 /**
  * Factory for user carbon footprint record queries.
- * Sorts client-side to avoid composite index requirements on userId + timestamp.
+ * Sorted client-side to avoid composite index on userId + timestamp.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
- * @param options Configuration for limits (sorting is done client-side).
+ * @param options sortOrder is applied client-side; limitCount is an approximate upper bound.
  */
 export function buildUserCalculatorRecordsQuery(
   db: Firestore,

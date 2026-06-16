@@ -102,7 +102,7 @@ export default function KnowledgeHubPage() {
     return buildUserCalculatorRecordsQuery(db, user.uid, { limitCount: 5 });
   }, [db, user]);
 
-  const { data: rawRecords, isLoading: recordsLoading } = useCollection<CarbonRecord>(recordsQuery);
+  const { data: rawRecords, isLoading: recordsLoading } = useCollection<CarbonRecord>(recordsQuery as unknown as import('firebase/firestore').Query<CarbonRecord> | null);
 
   const latestRecord = useMemo(() => {
     if (!rawRecords || rawRecords.length === 0) return null;

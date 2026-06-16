@@ -1,7 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+  "exclude": [
+    "node_modules", "build", "dist",
+    "**/*.test.ts", "**/*.test.tsx",
+    "src/ai/genkit.ts",
+    "src/ai/flows/ai-advisor-chat.ts",
+    "src/ai/flows/generate-carbon-analysis.ts",
+    "src/ai/flows/generate-reduction-plan.ts",
+    "src/ai/flows/index.ts"
+  ],
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo",

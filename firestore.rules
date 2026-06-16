@@ -1,0 +1,34 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profiles — only the owner can read or write their own document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Carbon footprint calculator records
+    match /calculator_records/{recordId} {
+      allow read, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create:       if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update:       if request.auth != null && request.auth.uid == resource.data.userId
+                          && request.auth.uid == request.resource.data.userId;
+    }
+
+    // Activity feed
+    match /activities/{activityId} {
+      allow read, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create:       if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update:       if request.auth != null && request.auth.uid == resource.data.userId
+                          && request.auth.uid == request.resource.data.userId;
+    }
+
+    // AI chat conversations
+    match /ai_conversations/{conversationId} {
+      allow read, delete: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create:       if request.auth != null && request.auth.uid == request.resource.data.userId;
+      allow update:       if request.auth != null && request.auth.uid == resource.data.userId
+                          && request.auth.uid == request.resource.data.userId;
+    }
+  }
+}

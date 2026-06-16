@@ -41,7 +41,7 @@ export default function ProfilePage() {
   const [, navigate] = useLocation();
 
   const profileRef = useMemo(() => (user && db ? doc(db, COLLECTIONS.USERS, user.uid) : null), [user, db]);
-  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef);
+  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as unknown as import('firebase/firestore').DocumentReference<UserProfile> | null);
 
   const [activeTab, setActiveTab] = useState('overview');
 

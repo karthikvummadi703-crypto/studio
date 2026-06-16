@@ -37,10 +37,24 @@ export default function ProgressPage() {
 
   const recordsQuery = useMemo(() => {
     if (!db || !user) return null;
-    return buildUserCalculatorRecordsQuery(db, user.uid, { sortOrder: 'asc', limitCount: 50 });
+    return buildUserCalculatorRecordsQuery(db, user.uid, { limitCount: 50 });
   }, [db, user]);
   
-  const { data: records, isLoading } = useCollection<CalculatorRecord>(recordsQuery);
+  const { data: rawRecords, isLoading } = useCollection<CalculatorRecord>(recordsQuery as unknown as import('firebase/firestore').Query<CalculatorRecord> | null);
+
+  // Sort ascending by timestamp client-side (avoids Firestore composite index)
+  const records = useMemo(() => {
+    if (!rawRecords) return null;
+    return [...rawRecords].sort((a, b) => {
+      const aTs = typeof a.timestamp === 'object' && a.timestamp && 'toDate' in a.timestamp
+        ? a.timestamp.toDate().getTime()
+        : typeof a.timestamp === 'number' ? a.timestamp : 0;
+      const bTs = typeof b.timestamp === 'object' && b.timestamp && 'toDate' in b.timestamp
+        ? b.timestamp.toDate().getTime()
+        : typeof b.timestamp === 'number' ? b.timestamp : 0;
+      return aTs - bTs;
+    });
+  }, [rawRecords]);
 
   /**
    * Memoized chart data with stable dependency tracking.

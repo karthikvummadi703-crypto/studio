@@ -1,0 +1,4 @@
+- [Firestore query strategy](firestore-query-strategy.md) — all queries use where-only (no orderBy); sort client-side to avoid composite index requirements.
+- [Firebase config TS export](firebase-config-ts.md) — use @ts-ignore (not @ts-expect-error) for the app/auth/db export; credentials being present makes @ts-expect-error "unused".
+- [react-day-picker v9](react-day-picker-v9.md) — v9 replaced IconLeft/IconRight with a single Chevron component; also renamed classNames keys (e.g. month_caption, button_previous).
+- [AI flows tsconfig exclusion](ai-flows-tsconfig.md) — genkit/server-side flow files in src/ai/flows/ must be excluded from frontend tsconfig; only types.ts is safe to include.

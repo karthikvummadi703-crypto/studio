@@ -78,7 +78,7 @@ export default function CalculatorPage() {
   const { toast } = useToast();
 
   const profileRef = useMemo(() => (user && db ? doc(db, 'users', user.uid) : null), [user, db]);
-  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef);
+  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as unknown as import('firebase/firestore').DocumentReference<UserProfile> | null);
 
   const [start, setStart] = useState('');
   const [destination, setDestination] = useState('');

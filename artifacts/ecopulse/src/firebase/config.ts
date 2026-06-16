@@ -40,5 +40,6 @@ if (isFirebaseConfigured) {
   }
 }
 
-// @ts-expect-error — intentionally undefined when not configured; guarded by isFirebaseConfigured
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — intentionally undefined when not configured; guarded by isFirebaseConfigured
 export { app, auth, db };

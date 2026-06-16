@@ -12,13 +12,16 @@ interface AdvisorData {
   isLoading: boolean;
 }
 
+type FirestoreTimestamp = { seconds?: number };
+
 /**
  * Custom hook that subscribes to the user's AI chat history and reads the shared
  * profile from the global Firebase context to avoid redundant Firestore listeners.
+ * Conversations are sorted client-side to avoid composite index requirements.
  */
 export function useAdvisorData(userId: string | undefined, db: Firestore | undefined): AdvisorData {
   const { profile, isProfileLoading } = useFirebase();
-  const [chats, setChats] = useState<AIConversation[]>([]);
+  const [rawChats, setRawChats] = useState<AIConversation[]>([]);
   const [isChatsLoading, setIsChatsLoading] = useState(true);
 
   const historyQuery = useMemo(() => {
@@ -28,7 +31,7 @@ export function useAdvisorData(userId: string | undefined, db: Firestore | undef
 
   useEffect(() => {
     if (!userId || !db || !historyQuery) {
-      setChats([]);
+      setRawChats([]);
       setIsChatsLoading(false);
       return;
     }
@@ -41,7 +44,7 @@ export function useAdvisorData(userId: string | undefined, db: Firestore | undef
         const chatsData = snap.docs.map(
           (doc) => ({ ...doc.data(), id: doc.id } as AIConversation)
         );
-        setChats(chatsData);
+        setRawChats(chatsData);
         setIsChatsLoading(false);
       },
       (error) => {
@@ -52,6 +55,14 @@ export function useAdvisorData(userId: string | undefined, db: Firestore | undef
 
     return () => unsubscribe();
   }, [userId, db, historyQuery]);
+
+  const chats = useMemo(() => {
+    return [...rawChats].sort((a, b) => {
+      const aS = (a.updatedAt as FirestoreTimestamp)?.seconds ?? 0;
+      const bS = (b.updatedAt as FirestoreTimestamp)?.seconds ?? 0;
+      return bS - aS;
+    });
+  }, [rawChats]);
 
   return {
     profile,
