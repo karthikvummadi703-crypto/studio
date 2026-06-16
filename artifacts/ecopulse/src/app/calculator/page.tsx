@@ -62,20 +62,30 @@ const MetricDisplay = memo(({ label, value, unit, color, isBadge }: MetricDispla
 });
 MetricDisplay.displayName = 'MetricDisplay';
 
+interface CalculationResult {
+  start: string;
+  destination: string;
+  mode: string;
+  distance: number;
+  co2: number;
+  impact: 'Low' | 'Medium' | 'High';
+  points: number;
+}
+
 export default function CalculatorPage() {
   const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
 
   const profileRef = useMemo(() => (user && db ? doc(db, 'users', user.uid) : null), [user, db]);
-  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as any);
+  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef);
 
   const [start, setStart] = useState('');
   const [destination, setDestination] = useState('');
   const [selectedMode, setSelectedMode] = useState<string>('car');
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeResult, setActiveResult] = useState<any>(null);
+  const [activeResult, setActiveResult] = useState<CalculationResult | null>(null);
 
   const handleCalculate = useCallback(() => {
     if (!start.trim() || !destination.trim()) {
@@ -92,7 +102,7 @@ export default function CalculatorPage() {
     setTimeout(() => {
       const distance = parseFloat((Math.random() * 45 + 5).toFixed(1));
       const mode = TRANSPORT_MODES.find(m => m.id === selectedMode)!;
-      const co2 = parseFloat((distance * (mode as any).co2PerKm).toFixed(2));
+      const co2 = parseFloat((distance * mode.co2PerKm).toFixed(2));
       
       const impact = co2 > 5 ? 'High' : co2 > 1.5 ? 'Medium' : 'Low';
 

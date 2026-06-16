@@ -40,7 +40,7 @@ export default function ProgressPage() {
     return buildUserCalculatorRecordsQuery(db, user.uid, { sortOrder: 'asc', limitCount: 50 });
   }, [db, user]);
   
-  const { data: records, isLoading } = useCollection<CalculatorRecord>(recordsQuery as any);
+  const { data: records, isLoading } = useCollection<CalculatorRecord>(recordsQuery);
 
   /**
    * Memoized chart data with stable dependency tracking.

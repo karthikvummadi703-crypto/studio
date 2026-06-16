@@ -37,7 +37,7 @@ export const useDoc = <T = DocumentData>(docRef: DocumentReference<T> | null) =>
         const dataJson = JSON.stringify(docData);
         if (dataJson !== prevDataRef.current) {
           prevDataRef.current = dataJson;
-          setData(docData as any);
+          setData(docData as T & { id: string });
         }
         setIsLoading(false);
       },

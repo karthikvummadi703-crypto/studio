@@ -217,7 +217,9 @@ export default function AIAdvisorPage() {
                   <div className="overflow-hidden">
                     <p className="text-[11px] font-bold truncate">{chat.title || 'Conversation'}</p>
                     <p className={cn("text-[9px] uppercase tracking-tighter mt-0.5 font-black", activeChatId === chat.id ? "text-primary-foreground/80" : "text-zinc-500")}>
-                      {(chat.updatedAt as any)?.toDate ? (chat.updatedAt as any).toDate().toLocaleDateString() : 'Just now'}
+                      {typeof (chat.updatedAt as { toDate?: () => Date })?.toDate === 'function'
+                        ? (chat.updatedAt as { toDate: () => Date }).toDate().toLocaleDateString()
+                        : 'Just now'}
                     </p>
                   </div>
                 </button>

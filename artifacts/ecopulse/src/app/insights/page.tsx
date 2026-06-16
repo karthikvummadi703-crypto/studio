@@ -13,12 +13,17 @@ import { getErrorMessage } from '@/lib/handle-error';
 
 const InsightCategoryCard = lazy(() => import('./insight-card'));
 
+interface LatestRecord {
+  co2?: number;
+  breakdown?: { transportation: number; homeEnergy: number; food: number; lifestyle: number };
+}
+
 export default function InsightsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
   const [insight, setInsight] = useState<GenerateReductionPlanOutput | null>(null);
-  const [latestRecord, setLatestRecord] = useState<any>(null);
+  const [latestRecord, setLatestRecord] = useState<LatestRecord | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();

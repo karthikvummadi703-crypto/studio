@@ -41,7 +41,7 @@ export default function ProfilePage() {
   const [, navigate] = useLocation();
 
   const profileRef = useMemo(() => (user && db ? doc(db, COLLECTIONS.USERS, user.uid) : null), [user, db]);
-  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as any);
+  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef);
 
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -61,7 +61,10 @@ export default function ProfilePage() {
   const joinedDate = useMemo(() => {
     if (!profile?.createdAt) return "---";
     try {
-      const date = (profile.createdAt as any)?.toDate ? (profile.createdAt as any).toDate() : new Date(profile.createdAt as string);
+      const ts = profile.createdAt as { toDate?: () => Date } | string | number;
+      const date = typeof (ts as { toDate?: () => Date }).toDate === 'function'
+        ? (ts as { toDate: () => Date }).toDate()
+        : new Date(ts as string);
       return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     } catch (e) {
       return "---";
