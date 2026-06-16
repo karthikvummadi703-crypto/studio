@@ -41,12 +41,16 @@ export default function InsightsPage() {
   }, [user, db]);
 
   const handleGenerate = useCallback(async () => {
-    if (!latestRecord) return;
+    if (!latestRecord || !user) return;
     setLoading(true);
     try {
+      const idToken = await user.getIdToken();
       const response = await fetch('/api/ai/insights', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
         body: JSON.stringify({
           totalEmissions: latestRecord.co2 || 0,
           emissionsBreakdown: latestRecord.breakdown || {
