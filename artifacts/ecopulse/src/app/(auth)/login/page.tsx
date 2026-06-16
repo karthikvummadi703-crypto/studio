@@ -28,7 +28,7 @@ import { LEVEL_CONFIG } from '@/lib/levels';
 import { FirebaseError } from 'firebase/app';
 
 /**
- * Login page with email/password, Google OAuth, Forgot Password link, and Demo Mode.
+ * Login page with email/password, Google OAuth, and Demo Mode.
  */
 export default function LoginPage() {
   const [, navigate] = useLocation();
@@ -233,13 +233,6 @@ export default function LoginPage() {
                 >
                   Password
                 </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[10px] font-bold text-primary hover:underline underline-offset-2 focus-visible:ring-1 focus-visible:ring-primary rounded outline-none"
-                  aria-label="Forgot your password? Reset it here"
-                >
-                  Forgot password?
-                </Link>
               </div>
               <div className="relative">
                 <Lock

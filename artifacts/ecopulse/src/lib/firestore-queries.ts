@@ -28,38 +28,38 @@ export function buildUserConversationsQuery(db: Firestore, userId: string): Quer
 
 /**
  * Factory for user activity log queries.
+ * Uses client-side sorting to avoid composite index requirements.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
- * @param limitCount Optional limit for the query.
+ * @param limitCount Optional limit for the query (applied client-side).
  */
 export function buildUserActivitiesQuery(db: Firestore, userId: string, limitCount = 5): Query<DocumentData> {
   return query(
     collection(db, COLLECTIONS.ACTIVITIES),
     where('userId', '==', userId),
-    orderBy('timestamp', 'desc'),
-    limit(limitCount)
+    limit(limitCount * 4)
   );
 }
 
 /**
  * Factory for user carbon footprint record queries.
+ * Sorts client-side to avoid composite index requirements on userId + timestamp.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
- * @param options Configuration for sorting and limits.
+ * @param options Configuration for limits (sorting is done client-side).
  */
 export function buildUserCalculatorRecordsQuery(
   db: Firestore,
   userId: string,
   options: { sortOrder?: 'asc' | 'desc'; limitCount?: number } = {}
 ): Query<DocumentData> {
-  const { sortOrder = 'desc', limitCount } = options;
+  const { limitCount } = options;
   const constraints: QueryConstraint[] = [
     where('userId', '==', userId),
-    orderBy('timestamp', sortOrder)
   ];
 
   if (limitCount) {
-    constraints.push(limit(limitCount));
+    constraints.push(limit(limitCount * 4));
   }
 
   return query(collection(db, COLLECTIONS.CALCULATOR_RECORDS), ...constraints);

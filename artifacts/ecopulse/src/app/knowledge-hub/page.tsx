@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -23,10 +23,10 @@ import {
   Clock,
   Lightbulb
 } from 'lucide-react';
-import { useUser, useFirestore } from '@/firebase';
-import { getDocs } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection } from '@/firebase';
 import { Link } from 'wouter';
 import { buildUserCalculatorRecordsQuery } from '@/lib/firestore-queries';
+import type { CarbonRecord } from '@/types';
 
 interface EducationalTopic {
   id: string;
@@ -92,34 +92,37 @@ const EDUCATIONAL_TOPICS: EducationalTopic[] = [
   }
 ];
 
-interface LatestRecord {
-  co2?: number;
-  distance?: number;
-  mode?: string;
-  start?: string;
-  destination?: string;
-  timestamp?: { toDate?: () => Date } | string;
-}
-
 export default function KnowledgeHubPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [selectedTopic, setSelectedTopic] = useState<EducationalTopic | null>(null);
-  const [latestRecord, setLatestRecord] = useState<LatestRecord | null>(null);
-  const fetchedRef = useRef(false);
 
-  useEffect(() => {
-    async function fetchOneTime() {
-      if (!db || !user || fetchedRef.current) return;
-      fetchedRef.current = true;
-      const q = buildUserCalculatorRecordsQuery(db, user.uid, { limitCount: 1 });
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        setLatestRecord(snap.docs[0].data() as LatestRecord);
-      }
-    }
-    fetchOneTime();
+  const recordsQuery = useMemo(() => {
+    if (!db || !user) return null;
+    return buildUserCalculatorRecordsQuery(db, user.uid, { limitCount: 5 });
   }, [db, user]);
+
+  const { data: rawRecords, isLoading: recordsLoading } = useCollection<CarbonRecord>(recordsQuery);
+
+  const latestRecord = useMemo(() => {
+    if (!rawRecords || rawRecords.length === 0) return null;
+    return [...rawRecords].sort((a, b) => {
+      const aTime = (a.timestamp as { seconds?: number })?.seconds ?? 0;
+      const bTime = (b.timestamp as { seconds?: number })?.seconds ?? 0;
+      return bTime - aTime;
+    })[0];
+  }, [rawRecords]);
+
+  const formatTimestamp = (ts: CarbonRecord['timestamp']): string => {
+    if (!ts) return 'recent activity';
+    if (typeof ts === 'object' && 'seconds' in ts) {
+      return new Date((ts as { seconds: number }).seconds * 1000).toLocaleDateString();
+    }
+    if (typeof ts === 'object' && 'toDate' in ts && typeof (ts as { toDate: () => Date }).toDate === 'function') {
+      return (ts as { toDate: () => Date }).toDate().toLocaleDateString();
+    }
+    return 'recent activity';
+  };
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6 space-y-12 animate-fade-in">
@@ -190,7 +193,11 @@ export default function KnowledgeHubPage() {
         </TabsContent>
 
         <TabsContent value="personalized" className="outline-none">
-          {latestRecord ? (
+          {recordsLoading ? (
+            <div className="flex items-center justify-center py-24" role="status" aria-live="polite">
+              <span className="text-sm text-zinc-500 font-medium">Loading your impact data…</span>
+            </div>
+          ) : latestRecord ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl overflow-hidden h-fit">
                 <CardHeader className="p-8 border-b border-zinc-100 bg-zinc-50/50">
@@ -199,15 +206,7 @@ export default function KnowledgeHubPage() {
                     <CardTitle className="font-headline text-lg text-foreground">Impact Breakdown</CardTitle>
                   </div>
                   <CardDescription className="text-xs font-bold uppercase tracking-widest mt-1 text-zinc-500">
-                    Telemetry from {latestRecord.timestamp
-                      ? (() => {
-                          const ts = latestRecord.timestamp;
-                          const date = typeof ts === 'object' && ts !== null && 'toDate' in ts && typeof ts.toDate === 'function'
-                            ? ts.toDate()
-                            : new Date(ts as string);
-                          return date.toLocaleDateString();
-                        })()
-                      : 'recent activity'}
+                    Telemetry from {formatTimestamp(latestRecord.timestamp)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-8 space-y-8">
@@ -232,7 +231,11 @@ export default function KnowledgeHubPage() {
                         <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">Journey Distance</span>
                         <span className="text-xs font-bold text-primary">{latestRecord.distance?.toFixed(1) ?? 0} km</span>
                       </div>
-                      <Progress value={Math.min(100, ((latestRecord.distance ?? 0) / 100) * 100)} className="h-1.5 bg-zinc-100" aria-label="Journey distance as percentage of 100km" />
+                      <Progress 
+                        value={Math.min(100, ((latestRecord.distance ?? 0) / 100) * 100)} 
+                        className="h-1.5 bg-zinc-100" 
+                        aria-label="Journey distance as percentage of 100km" 
+                      />
                     </div>
                   </div>
                 </CardContent>

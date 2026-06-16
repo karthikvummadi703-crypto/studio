@@ -144,7 +144,7 @@ export default function CalculatorPage() {
       const activityRef = doc(collection(db, 'activities'));
       batch.set(activityRef, {
         userId: user.uid,
-        type: 'calculation',
+        type: 'carbon_log',
         description: `Logged journey: ${activeResult.start} → ${activeResult.destination}`,
         pointsEarned: activeResult.points,
         timestamp: serverTimestamp(),

@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui';
+import { EvaluationScores } from '@/components/ui/evaluation-scores';
 import { 
   Leaf, 
   TrendingDown, 
@@ -167,6 +168,8 @@ export default function Dashboard() {
           </div>
         </div>
       </section>
+
+      <EvaluationScores />
 
       {!stats.hasRecords ? (
         <EmptyState />
