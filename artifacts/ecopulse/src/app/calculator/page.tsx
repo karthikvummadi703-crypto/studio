@@ -127,14 +127,19 @@ export default function CalculatorPage() {
       const batch = writeBatch(db);
       
       const recordRef = doc(collection(db, 'calculator_records'));
-      batch.set(recordRef, { ...activeResult, userId: user.uid, timestamp: serverTimestamp() });
+      batch.set(recordRef, {
+        ...activeResult,
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+        pointsEarned: activeResult.points,
+      });
 
       const userRef = doc(db, 'users', user.uid);
       const scoreChange = Math.max(1, Math.min(10, 10 - activeResult.co2));
-      batch.update(userRef, {
+      batch.set(userRef, {
         greenPoints: increment(activeResult.points),
         sustainabilityScore: increment(scoreChange),
-      });
+      }, { merge: true });
 
       const activityRef = doc(collection(db, 'activities'));
       batch.set(activityRef, {
@@ -142,7 +147,7 @@ export default function CalculatorPage() {
         type: 'calculation',
         description: `Logged journey: ${activeResult.start} → ${activeResult.destination}`,
         pointsEarned: activeResult.points,
-        timestamp: serverTimestamp()
+        timestamp: serverTimestamp(),
       });
 
       await batch.commit();

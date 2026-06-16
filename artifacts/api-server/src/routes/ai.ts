@@ -1,13 +1,16 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
 import { logger } from "../lib/logger";
 
 const router = Router();
 
-const apiKey = process.env.GOOGLE_AI_API_KEY;
+const apiKey = process.env["GOOGLE_AI_API_KEY"];
 if (!apiKey) {
   logger.warn("GOOGLE_AI_API_KEY is not set — AI endpoints will return 503");
 }
+
+const genai = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -21,7 +24,7 @@ interface AuthedRequest extends Request {
  */
 async function verifyFirebaseToken(idToken: string): Promise<string> {
   const firebaseApiKey =
-    process.env.FIREBASE_API_KEY ?? process.env.VITE_FIREBASE_API_KEY;
+    process.env["FIREBASE_API_KEY"] ?? process.env["VITE_FIREBASE_API_KEY"];
   if (!firebaseApiKey) throw new Error("FIREBASE_API_KEY not configured");
 
   const res = await fetch(
@@ -69,19 +72,36 @@ async function requireAuth(
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 
-const rateLimitStore = new Map<string, number[]>();
+interface RateLimitEntry {
+  timestamps: number[];
+  lastAccess: number;
+}
+
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+// Periodically evict stale entries (keys not accessed in 5 minutes)
+setInterval(
+  () => {
+    const cutoff = Date.now() - 5 * 60_000;
+    for (const [key, entry] of rateLimitStore) {
+      if (entry.lastAccess < cutoff) rateLimitStore.delete(key);
+    }
+  },
+  60_000
+);
 
 function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
-  const timestamps = (rateLimitStore.get(key) ?? []).filter(
-    (t) => now - t < windowMs
-  );
-  if (timestamps.length >= limit) {
-    rateLimitStore.set(key, timestamps);
+  const entry = rateLimitStore.get(key) ?? { timestamps: [], lastAccess: now };
+  entry.timestamps = entry.timestamps.filter((t) => now - t < windowMs);
+  entry.lastAccess = now;
+
+  if (entry.timestamps.length >= limit) {
+    rateLimitStore.set(key, entry);
     return false;
   }
-  timestamps.push(now);
-  rateLimitStore.set(key, timestamps);
+  entry.timestamps.push(now);
+  rateLimitStore.set(key, entry);
   return true;
 }
 
@@ -99,35 +119,37 @@ function rateLimit(limit: number, windowMs: number) {
   };
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Validation schemas ───────────────────────────────────────────────────────
 
-interface ChatMessage {
-  role: "user" | "ai";
-  text: string;
-}
+const ChatMessageSchema = z.object({
+  role: z.enum(["user", "ai"]),
+  text: z.string().max(4000),
+});
 
-interface UserContext {
-  points: number;
-  score: number;
-  level: string;
-  challengesCompleted: number;
-}
+const UserContextSchema = z.object({
+  points: z.number().nonnegative(),
+  score: z.number().nonnegative(),
+  level: z.string().max(50),
+  challengesCompleted: z.number().nonnegative(),
+});
 
-interface ChatRequestBody {
-  history?: ChatMessage[];
-  userInput: string;
-  userContext?: UserContext;
-}
+const ChatRequestSchema = z.object({
+  history: z.array(ChatMessageSchema).max(20).optional().default([]),
+  userInput: z.string().min(1).max(2000),
+  userContext: UserContextSchema.optional(),
+});
 
-interface InsightsRequestBody {
-  totalEmissions: number;
-  emissionsBreakdown?: {
-    transportation: number;
-    homeEnergy: number;
-    food: number;
-    lifestyle: number;
-  };
-}
+const InsightsRequestSchema = z.object({
+  totalEmissions: z.number().nonnegative(),
+  emissionsBreakdown: z
+    .object({
+      transportation: z.number().nonnegative(),
+      homeEnergy: z.number().nonnegative(),
+      food: z.number().nonnegative(),
+      lifestyle: z.number().nonnegative(),
+    })
+    .optional(),
+});
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
@@ -141,17 +163,18 @@ router.post(
   requireAuth,
   rateLimit(15, 60_000),
   async (req: AuthedRequest, res: Response) => {
-    if (!apiKey) {
+    if (!genai) {
       res.status(503).json({ error: "AI service not configured" });
       return;
     }
 
-    const { history = [], userInput, userContext }: ChatRequestBody = req.body;
-
-    if (!userInput?.trim()) {
-      res.status(400).json({ error: "userInput is required" });
+    const parsed = ChatRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request" });
       return;
     }
+
+    const { history, userInput, userContext } = parsed.data;
 
     const ctx = userContext ?? {
       points: 0,
@@ -186,8 +209,7 @@ Keep responses concise (2-4 sentences) but genuinely helpful. Use plain text —
     res.setHeader("Transfer-Encoding", "chunked");
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      const stream = await ai.models.generateContentStream({
+      const stream = await genai.models.generateContentStream({
         model: "gemini-2.5-flash",
         contents,
         config: {
@@ -216,39 +238,24 @@ Keep responses concise (2-4 sentences) but genuinely helpful. Use plain text —
 /**
  * POST /api/ai/insights
  * Auth: Firebase ID token required.  Rate: 10 req / 60 s per uid.
- *
- * Returns GenerateReductionPlanOutput — matches the frontend type exactly:
- * {
- *   personalizedAnalysis: string
- *   weeklyActionPlan: string
- *   monthlyImprovementStrategy: string
- *   transportationRecommendations: Recommendation[]
- *   homeEnergyRecommendations: Recommendation[]
- *   foodRecommendations: Recommendation[]
- *   lifestyleRecommendations: Recommendation[]
- * }
- * Recommendation = { action, impactLevel: High|Medium|Low,
- *                    difficultyLevel: Easy|Moderate|Hard, estimatedCarbonSavings }
  */
 router.post(
   "/ai/insights",
   requireAuth,
   rateLimit(10, 60_000),
   async (req: AuthedRequest, res: Response) => {
-    if (!apiKey) {
+    if (!genai) {
       res.status(503).json({ error: "AI service not configured" });
       return;
     }
 
-    const { totalEmissions, emissionsBreakdown }: InsightsRequestBody =
-      req.body;
-
-    if (typeof totalEmissions !== "number" || totalEmissions < 0) {
-      res
-        .status(400)
-        .json({ error: "totalEmissions must be a non-negative number" });
+    const parsed = InsightsRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request" });
       return;
     }
+
+    const { totalEmissions, emissionsBreakdown } = parsed.data;
 
     const breakdown = emissionsBreakdown ?? {
       transportation: totalEmissions,
@@ -287,8 +294,7 @@ Rules:
 - estimatedCarbonSavings must be a realistic numeric string, e.g. "85 kg CO₂/yr".`;
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
+      const response = await genai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: { maxOutputTokens: 2048, temperature: 0.4 },
@@ -298,8 +304,8 @@ Rules:
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error("No JSON in AI response");
 
-      const parsed = JSON.parse(jsonMatch[0]);
-      res.json(parsed);
+      const result = JSON.parse(jsonMatch[0]);
+      res.json(result);
     } catch (err: unknown) {
       logger.error({ err }, "AI insights error");
       res.status(500).json({ error: "Failed to generate insights" });
