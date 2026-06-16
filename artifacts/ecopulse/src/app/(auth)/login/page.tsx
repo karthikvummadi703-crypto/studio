@@ -17,7 +17,7 @@ import {
   Card, CardContent, CardHeader,
   CardTitle, CardDescription, CardFooter
 } from '@/components/ui/card';
-import { Leaf, Mail, Lock, Sparkles, FlaskConical } from 'lucide-react';
+import { Leaf, Mail, Lock, Sparkles, FlaskConical, Chrome, ExternalLink } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
@@ -276,6 +276,35 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Google setup guide — shows the exact domain to add to Firebase Console */}
+          <details className="rounded-2xl border border-amber-200 bg-amber-50 text-xs" aria-label="Google Sign-In setup guide">
+            <summary className="flex items-center gap-2 px-4 py-3 cursor-pointer font-bold text-amber-800 select-none list-none">
+              <Chrome className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              Google Sign-In: one-time Firebase setup required
+            </summary>
+            <div className="px-4 pb-4 space-y-2 text-amber-900">
+              <p className="font-medium leading-snug">Add this domain to Firebase Console so Google login works:</p>
+              <code className="block break-all bg-white border border-amber-200 rounded-lg px-3 py-2 font-mono text-[11px] select-all">
+                {window.location.hostname}
+              </code>
+              <ol className="space-y-1 text-[11px] font-medium leading-snug list-decimal list-inside">
+                <li>Open Firebase Console → Authentication</li>
+                <li>Settings tab → Authorized domains</li>
+                <li>Add domain → paste the hostname above → Save</li>
+              </ol>
+              <a
+                href="https://console.firebase.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-amber-800 font-bold hover:underline"
+                aria-label="Open Firebase Console in new tab"
+              >
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                Open Firebase Console
+              </a>
+            </div>
+          </details>
+
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
@@ -286,7 +315,7 @@ export default function LoginPage() {
             >
               {googleLoading
                 ? <Spinner className="h-4 w-4" label="Connecting Google..." />
-                : 'Google'}
+                : <><Chrome className="h-4 w-4" aria-hidden="true" /> Google</>}
             </Button>
             <Button
               variant="outline"
