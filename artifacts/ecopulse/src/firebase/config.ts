@@ -1,24 +1,28 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth, Auth } from 'firebase/auth';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            as string,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        as string,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         as string,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     as string,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID             as string,
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY            as string | undefined,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN        as string | undefined,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID         as string | undefined,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     as string | undefined,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID as string | undefined,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID             as string | undefined,
 };
 
-const missingKeys = Object.entries(firebaseConfig)
-  .filter(([, v]) => !v)
-  .map(([k]) => `VITE_${k.replace(/([A-Z])/g, '_$1').toUpperCase()}`);
+const missingKeys = (Object.keys(firebaseConfig) as (keyof typeof firebaseConfig)[])
+  .filter((k) => !firebaseConfig[k]);
 
-if (missingKeys.length > 0) {
-  console.error(
-    `[EcoPulse] Missing Firebase env vars: ${missingKeys.join(', ')}\n` +
-    'Copy .env.example to .env.local and fill in your Firebase project values.'
+export const isFirebaseConfigured = missingKeys.length === 0;
+
+if (!isFirebaseConfigured) {
+  console.warn(
+    '[EcoPulse] Firebase credentials not configured.\n' +
+    'Add the following Replit Secrets:\n  ' +
+    ['VITE_FIREBASE_API_KEY', 'VITE_FIREBASE_AUTH_DOMAIN', 'VITE_FIREBASE_PROJECT_ID',
+     'VITE_FIREBASE_STORAGE_BUCKET', 'VITE_FIREBASE_MESSAGING_SENDER_ID', 'VITE_FIREBASE_APP_ID']
+      .join('\n  ')
   );
 }
 
@@ -26,8 +30,15 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
-app  = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-auth = getAuth(app);
-db   = getFirestore(app);
+if (isFirebaseConfigured) {
+  try {
+    app  = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig as Required<typeof firebaseConfig>);
+    auth = getAuth(app);
+    db   = getFirestore(app);
+  } catch (e) {
+    console.error('[EcoPulse] Firebase initialisation failed:', e);
+  }
+}
 
+// @ts-expect-error — intentionally undefined when not configured; guarded by isFirebaseConfigured
 export { app, auth, db };
