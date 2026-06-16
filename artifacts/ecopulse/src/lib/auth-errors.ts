@@ -11,6 +11,10 @@ const FIREBASE_ERROR_MAP: Record<string, string> = {
   'auth/too-many-requests': 'Too many attempts. Please try again later.',
   'auth/network-request-failed': 'Network error. Please check your connection.',
   'auth/operation-not-allowed': 'This sign-in method is currently disabled.',
+  'auth/popup-blocked': 'Popup was blocked by your browser. Please allow popups and try again.',
+  'auth/popup-closed-by-user': 'Sign-in popup was closed before completing. Please try again.',
+  'auth/cancelled-popup-request': 'Another sign-in is already in progress. Please try again.',
+  'auth/unauthorized-domain': 'UNAUTHORIZED_DOMAIN',
 };
 
 /**
@@ -20,4 +24,11 @@ const FIREBASE_ERROR_MAP: Record<string, string> = {
  */
 export function getAuthErrorMessage(code: string): string {
   return FIREBASE_ERROR_MAP[code] ?? 'Authentication failed. Please try again.';
+}
+
+/**
+ * Returns true if the error code is an unauthorized domain error.
+ */
+export function isUnauthorizedDomainError(code: string): boolean {
+  return code === 'auth/unauthorized-domain';
 }

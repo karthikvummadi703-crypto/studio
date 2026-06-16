@@ -22,7 +22,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Link } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { COLLECTIONS, APP_METADATA, DEMO_USER, IS_DEMO_KEY } from '@/lib/constants';
-import { getAuthErrorMessage } from '@/lib/auth-errors';
+import { getAuthErrorMessage, isUnauthorizedDomainError } from '@/lib/auth-errors';
 import { setSessionCookieAction } from '@/app/actions/session';
 import { LEVEL_CONFIG } from '@/lib/levels';
 import { FirebaseError } from 'firebase/app';
@@ -101,11 +101,21 @@ export default function LoginPage() {
       navigate('/dashboard');
     } catch (error: unknown) {
       const code = error instanceof FirebaseError ? error.code : 'unknown';
-      toast({
-        variant: 'destructive',
-        title: 'Google Login Failed',
-        description: getAuthErrorMessage(code),
-      });
+
+      if (isUnauthorizedDomainError(code)) {
+        toast({
+          variant: 'destructive',
+          title: 'Domain Not Authorized',
+          description: `Add "${window.location.hostname}" to Firebase Console → Authentication → Settings → Authorized domains, then try again.`,
+          duration: 10000,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Google Login Failed',
+          description: getAuthErrorMessage(code),
+        });
+      }
     } finally {
       setGoogleLoading(false);
     }
