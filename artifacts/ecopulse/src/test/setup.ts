@@ -38,6 +38,7 @@ vi.mock('firebase/auth', () => ({
   signInWithEmailAndPassword:     vi.fn(),
   createUserWithEmailAndPassword: vi.fn(),
   signInWithPopup:                vi.fn(),
+  signInWithCredential:           vi.fn(),
   signInAnonymously:              vi.fn(),
   signOut:                        vi.fn(),
   updateProfile:                  vi.fn(),
@@ -46,8 +47,10 @@ vi.mock('firebase/auth', () => ({
     cb(null);
     return vi.fn();
   }),
-  GoogleAuthProvider: vi.fn(),
-  getAuth:            vi.fn(),
+  GoogleAuthProvider: class GoogleAuthProvider {
+    static credential = vi.fn(() => ({ providerId: 'google.com' }));
+  },
+  getAuth: vi.fn(),
   FirebaseError: class FirebaseError extends Error {
     code: string;
     constructor(code: string, message: string) { super(message); this.code = code; }

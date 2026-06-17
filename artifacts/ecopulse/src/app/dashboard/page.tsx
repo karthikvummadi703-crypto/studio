@@ -284,7 +284,9 @@ export default function Dashboard() {
                       <span>Sync Progress: 0%</span>
                       <span>Nodes Remaining: 1</span>
                     </div>
-                    <Progress value={5} className="h-2 bg-black/5" />
+                    <div className="h-2 rounded-full bg-black/5 overflow-hidden">
+                      <div className="h-full w-[5%] rounded-full bg-primary/40" />
+                    </div>
                   </div>
                 </CardContent>
                 <div className="mt-8 pt-6 border-t border-black/5">
