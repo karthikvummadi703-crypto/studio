@@ -139,13 +139,13 @@ export function FloatingAIAdvisor() {
             isExpanded ? 'w-[420px] h-[600px]' : 'w-[340px] h-[480px]'
           )}
           role="dialog"
-          aria-label="EcoPulse AI Advisor"
-          aria-modal="false"
+          aria-modal="true"
+          aria-labelledby="advisor-dialog-title"
         >
           <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-border/50">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <CardTitle id="advisor-dialog-title" className="text-sm font-semibold flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-              EcoPulse Advisor
+              EcoPulse AI Advisor
             </CardTitle>
             <div className="flex items-center gap-1">
               <Button

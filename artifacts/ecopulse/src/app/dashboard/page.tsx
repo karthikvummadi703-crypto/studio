@@ -154,7 +154,12 @@ export default function Dashboard() {
 
           <div className="hidden lg:flex flex-col items-center justify-center space-y-4 p-8 bg-zinc-50 rounded-[2.5rem] border border-zinc-100 shadow-sm">
              <div className="relative flex items-center justify-center">
-                <svg className="w-32 h-32 transform -rotate-90">
+                <svg
+                  className="w-32 h-32 transform -rotate-90"
+                  role="img"
+                  aria-labelledby="score-ring-title"
+                >
+                  <title id="score-ring-title">Sustainability score: {stats.score.toFixed(0)} out of 100</title>
                   <circle className="text-zinc-200" strokeWidth="8" stroke="currentColor" fill="transparent" r="56" cx="64" cy="64" />
                   <circle className="text-primary" strokeWidth="8" strokeDasharray="351" strokeDashoffset={351 * (1 - stats.score / 100)} strokeLinecap="round" stroke="currentColor" fill="transparent" r="56" cx="64" cy="64" />
                 </svg>

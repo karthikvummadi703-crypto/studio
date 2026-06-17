@@ -10,6 +10,7 @@ vi.mock('@/firebase', () => ({
   useDoc: vi.fn(() => ({ data: null, isLoading: false, error: null })),
   useCollection: vi.fn(() => ({ data: [], isLoading: false, error: null })),
   useAuth: vi.fn(() => ({})),
+  useFirebase: vi.fn(() => ({ updateProfileScores: vi.fn() })),
   auth: {},
   db: {},
   FirebaseClientProvider: ({ children }: { children: React.ReactNode }) => children,
