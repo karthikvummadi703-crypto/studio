@@ -2,7 +2,7 @@
 import { useMemo, memo } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui';
@@ -13,7 +13,11 @@ import {
   Sparkles,
   Info,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  Car,
+  Zap,
+  Trophy,
+  BarChart3,
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { cn } from '@/lib/utils';
@@ -81,14 +85,28 @@ export default function Dashboard() {
     const score = profile?.sustainabilityScore || 0;
     const latestCO2 = records?.[0]?.co2 || 0;
     const totalSaved = records?.reduce((acc: number, curr: CarbonRecord) => acc + (curr.co2 < 2 ? (2 - curr.co2) : 0), 0) || 0;
-    
+    const completedCount = profile?.completedChallenges?.length || 0;
+    const totalChallenges = CHALLENGES.length || 1;
+
+    // Factor scores (0–100)
+    const avgCO2 = records && records.length > 0
+      ? records.reduce((s, r) => s + r.co2, 0) / records.length
+      : null;
+    const transportScore = avgCO2 === null ? 0 : Math.round(Math.max(0, Math.min(100, 100 - avgCO2 * 8)));
+    const loggingScore = Math.min(100, ((records?.length || 0) / 10) * 100);
+    const challengeScore = Math.round((completedCount / totalChallenges) * 100);
+    const pointsScore = Math.min(100, (points / 500) * 100);
+
     return {
       points,
       score,
       level: getLevelFromPoints(points),
       latestCO2,
       totalSaved,
-      hasRecords: !!(records && records.length > 0)
+      hasRecords: !!(records && records.length > 0),
+      completedCount,
+      totalChallenges,
+      factors: { transportScore, loggingScore, challengeScore, pointsScore },
     };
   }, [profile, records]);
 
@@ -170,6 +188,73 @@ export default function Dashboard() {
              </div>
              <Badge variant="outline" className="bg-white border-primary/20 text-primary text-[9px] font-black uppercase px-4 py-1">Operational</Badge>
           </div>
+        </div>
+      </section>
+
+      {/* ── Score Factors ── */}
+      <section aria-labelledby="factors-heading">
+        <div className="flex items-center gap-3 mb-6">
+          <BarChart3 className="h-5 w-5 text-primary" aria-hidden="true" />
+          <h2 id="factors-heading" className="text-xl font-headline font-bold text-foreground">Score Factors</h2>
+          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 text-primary">Live</Badge>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              label: 'Transport Efficiency',
+              icon: Car,
+              score: stats.factors.transportScore,
+              detail: stats.hasRecords ? `Avg ${stats.latestCO2.toFixed(1)} kg CO₂/trip` : 'Log a journey to score',
+              color: 'text-sky-600',
+              bg: 'bg-sky-50',
+              bar: 'bg-sky-500',
+            },
+            {
+              label: 'Activity Logging',
+              icon: Zap,
+              score: Math.round(stats.factors.loggingScore),
+              detail: `${records?.length || 0} / 10 journeys logged`,
+              color: 'text-amber-600',
+              bg: 'bg-amber-50',
+              bar: 'bg-amber-500',
+            },
+            {
+              label: 'Challenges',
+              icon: Trophy,
+              score: stats.factors.challengeScore,
+              detail: `${stats.completedCount} / ${stats.totalChallenges} completed`,
+              color: 'text-violet-600',
+              bg: 'bg-violet-50',
+              bar: 'bg-violet-500',
+            },
+            {
+              label: 'Green Points',
+              icon: Leaf,
+              score: Math.round(stats.factors.pointsScore),
+              detail: `${stats.points} / 500 pts milestone`,
+              color: 'text-emerald-600',
+              bg: 'bg-emerald-50',
+              bar: 'bg-emerald-500',
+            },
+          ].map(({ label, icon: Icon, score, detail, color, bg, bar }) => (
+            <div key={label} className="bg-white rounded-[1.5rem] p-6 border border-zinc-100 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className={cn('p-2.5 rounded-xl', bg)}>
+                  <Icon className={cn('h-4 w-4', color)} aria-hidden="true" />
+                </div>
+                <span className={cn('text-2xl font-headline font-bold', color)}>
+                  {score}<span className="text-sm font-bold text-muted-foreground ml-0.5">%</span>
+                </span>
+              </div>
+              <div className="space-y-2">
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{label}</p>
+                <div className="h-1.5 rounded-full bg-zinc-100 overflow-hidden" role="progressbar" aria-valuenow={score} aria-valuemin={0} aria-valuemax={100} aria-label={`${label}: ${score}%`}>
+                  <div className={cn('h-full rounded-full transition-all duration-700', bar)} style={{ width: `${score}%` }} />
+                </div>
+                <p className="text-[10px] text-zinc-500 font-medium">{detail}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
