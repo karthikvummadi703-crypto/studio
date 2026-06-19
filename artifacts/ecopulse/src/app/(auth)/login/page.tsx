@@ -30,7 +30,7 @@ import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { setSessionCookieAction } from "@/app/actions/session";
 import { LEVEL_CONFIG } from "@/lib/levels";
 import { FirebaseError } from "firebase/app";
-import { fetchGoogleClientId, loadGsiScript, renderGoogleButton } from "@/lib/google-gis";
+import { fetchGoogleClientId, loadGsiScript } from "@/lib/google-gis";
 
 /** Google wordmark SVG so we can show a consistent icon on all states */
 const GoogleIcon = () => (
@@ -55,19 +55,12 @@ const GoogleIcon = () => (
 );
 
 /**
- * Login page with email/password, Google OAuth, and Demo Mode.
+ * Login page with email/password, Google OAuth (GIS), and Demo Mode.
  *
- * Google sign-in strategy (in order of preference):
- *   1. Google Identity Services (GIS) + signInWithCredential — bypasses
- *      Firebase's client-side authorized-domain check entirely.
- *   2. signInWithPopup — classic Firebase popup, used as fallback when the
- *      Firebase project's init.json doesn't expose a clientId (e.g. no
- *      Firebase Hosting), or when GIS fails to load.
- *
- * Either way there is NO setup code pasted into Firebase Console on every
- * visit.  The deployed .replit.app domain only needs to be added to
- * Firebase Console → Authentication → Authorized Domains ONCE (and only if
- * using the popup fallback path).
+ * Google sign-in strategy:
+ *   1. Google Identity Services (GIS) + signInWithCredential — no Firebase
+ *      authorized-domain check, works on any Replit dev/deploy URL.
+ *   2. signInWithPopup — popup fallback if GIS script fails to load.
  */
 export default function LoginPage() {
   const [, navigate] = useLocation();
@@ -78,42 +71,10 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
 
-  /* ── GIS rendering ──
-     gsiReady = true  → GIS button rendered in gsiContainerRef; overlay hidden
-     gsiReady = false → overlay button shows; clicks use popup fallback
-  */
   const gsiContainerRef = useRef<HTMLDivElement>(null);
   const [gsiReady, setGsiReady] = useState(false);
-  const gsiClientIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function initGsi() {
-      const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined;
-      if (!authDomain) return;
-
-      const clientId = await fetchGoogleClientId(authDomain);
-      if (!clientId || cancelled) return;
-      gsiClientIdRef.current = clientId;
-
-      try {
-        await loadGsiScript();
-        if (cancelled || !gsiContainerRef.current) return;
-        await renderGoogleButton(gsiContainerRef.current, clientId);
-        if (!cancelled) setGsiReady(true);
-      } catch {
-        /* GIS failed — overlay button will use popup fallback automatically */
-      }
-    }
-
-    initGsi();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /* ── Shared: write Firestore profile + navigate ── */
+  /* ── Shared: write Firestore profile + set session cookie ── */
   const handleSession = useCallback(async (user: User) => {
     const idToken = await user.getIdToken();
     await setSessionCookieAction(idToken);
@@ -146,34 +107,91 @@ export default function LoginPage() {
     await batch.commit();
   }, []);
 
-  /* ── Google Sign-In ──
-     Tries GIS (no domain restriction) first; falls back to signInWithPopup.
+  /* ── GIS initialisation ──
+     Loads the GSI script, renders the official Google button, and wires the
+     credential callback directly — so setGsiReady(true) fires right after
+     the button is painted (not after the user clicks it).
   */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initGsi() {
+      const authDomain = import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined;
+      if (!authDomain) return;
+
+      const clientId = await fetchGoogleClientId(authDomain);
+      if (!clientId || cancelled) return;
+
+      try {
+        await loadGsiScript();
+        if (cancelled || !gsiContainerRef.current || !window.google?.accounts?.id) return;
+
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: async (response: { credential: string }) => {
+            if (!response.credential) return;
+            setGoogleLoading(true);
+            try {
+              const result = await signInWithCredential(
+                auth,
+                GoogleAuthProvider.credential(response.credential)
+              );
+              await saveGoogleProfile(result.user);
+              sessionStorage.removeItem(IS_DEMO_KEY);
+              await handleSession(result.user);
+              navigate("/dashboard");
+            } catch (error: unknown) {
+              const code = error instanceof FirebaseError ? error.code : "unknown";
+              toast({
+                variant: "destructive",
+                title: "Google Sign-In Failed",
+                description:
+                  code !== "unknown"
+                    ? getAuthErrorMessage(code)
+                    : "Could not sign in with Google. Please try again.",
+              });
+            } finally {
+              setGoogleLoading(false);
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          itp_support: true,
+        });
+
+        window.google.accounts.id.renderButton(gsiContainerRef.current, {
+          theme: "outline",
+          size: "large",
+          shape: "pill",
+          text: "signin_with",
+          width: gsiContainerRef.current.offsetWidth || 200,
+          logo_alignment: "center",
+        });
+
+        if (!cancelled) setGsiReady(true);
+      } catch {
+        /* GIS failed to load — overlay button will use signInWithPopup */
+      }
+    }
+
+    initGsi();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, toast, handleSession, saveGoogleProfile]);
+
+  /* ── Overlay button handler (popup fallback when GIS unavailable) ── */
   const handleGoogleLogin = useCallback(async (): Promise<void> => {
     setGoogleLoading(true);
     try {
-      const clientId = gsiClientIdRef.current;
-
-      if (clientId && gsiReady && window.google?.accounts?.id) {
-        /* Path A: GIS — no Firebase authorized-domain check */
-        const idToken = await renderGoogleButton(gsiContainerRef.current!, clientId);
-        const result = await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
-        await saveGoogleProfile(result.user);
-        sessionStorage.removeItem(IS_DEMO_KEY);
-        await handleSession(result.user);
-        navigate("/dashboard");
-      } else {
-        /* Path B: Popup fallback */
-        const provider = new GoogleAuthProvider();
-        const result = await signInWithPopup(auth, provider);
-        await saveGoogleProfile(result.user);
-        sessionStorage.removeItem(IS_DEMO_KEY);
-        await handleSession(result.user);
-        navigate("/dashboard");
-      }
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      await saveGoogleProfile(result.user);
+      sessionStorage.removeItem(IS_DEMO_KEY);
+      await handleSession(result.user);
+      navigate("/dashboard");
     } catch (error: unknown) {
       const code = error instanceof FirebaseError ? error.code : "unknown";
-      /* Ignore user-cancelled clicks */
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         return;
       }
@@ -188,7 +206,7 @@ export default function LoginPage() {
     } finally {
       setGoogleLoading(false);
     }
-  }, [navigate, toast, handleSession, saveGoogleProfile, gsiReady]);
+  }, [navigate, toast, handleSession, saveGoogleProfile]);
 
   const handleLogin = useCallback(
     async (e: React.FormEvent): Promise<void> => {
@@ -373,9 +391,9 @@ export default function LoginPage() {
 
           <div className="grid grid-cols-2 gap-3">
             {/*
-              Google button: GIS renders its own button when the clientId is
-              available (no Firebase domain restriction). Otherwise the overlay
-              button handles the click via signInWithPopup.
+              Google button: GIS renders its own button when clientId is
+              available (no Firebase domain restriction). Overlay handles
+              clicks via signInWithPopup if GIS fails to load.
             */}
             <div className="relative h-12">
               {/* GIS injects its own button DOM here */}
