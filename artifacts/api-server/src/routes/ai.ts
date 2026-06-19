@@ -4,6 +4,7 @@ import {
   HarmBlockThreshold,
   HarmCategory,
 } from "@google/generative-ai";
+import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
 
@@ -22,7 +23,7 @@ const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
 ];
 
-router.post("/ai/chat", async (req, res) => {
+router.post("/ai/chat", requireAuth, async (req, res) => {
   try {
     const { history = [], userInput, userContext } = req.body as {
       history: { role: string; text: string }[];
@@ -91,7 +92,7 @@ Instruction: Provide a concise, 2-sentence actionable sustainability tip. Be spe
   }
 });
 
-router.post("/ai/insights", async (req, res) => {
+router.post("/ai/insights", requireAuth, async (req, res) => {
   try {
     const { totalEmissions, emissionsBreakdown, userName = "User" } = req.body as {
       totalEmissions: number;
