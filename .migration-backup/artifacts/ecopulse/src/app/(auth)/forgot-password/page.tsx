@@ -51,11 +51,25 @@ export default function ForgotPasswordPage() {
 
     setLoading(true);
     try {
+      if (!auth) throw new Error('auth/not-initialized');
       await sendPasswordResetEmail(auth, trimmedEmail);
       setSent(true);
     } catch (error: unknown) {
-      // Always show success even on user-not-found to prevent email enumeration
-      setSent(true);
+      const code = (error as { code?: string })?.code ?? '';
+      if (code === 'auth/user-not-found' || code === '') {
+        // Silently succeed for user-not-found to prevent email enumeration,
+        // and for the no-code case (success path doesn't always have a code).
+        setSent(true);
+      } else if (code === 'auth/invalid-email') {
+        toast({ variant: 'destructive', title: 'Invalid Email', description: 'Please double-check the email address.' });
+      } else if (code === 'auth/too-many-requests') {
+        toast({ variant: 'destructive', title: 'Too Many Attempts', description: 'Please wait a few minutes before trying again.' });
+      } else if (code === 'auth/not-initialized') {
+        toast({ variant: 'destructive', title: 'Service Unavailable', description: 'Firebase is not configured. Contact support.' });
+      } else {
+        // Network error or other — show a real message so the user knows to retry
+        toast({ variant: 'destructive', title: 'Send Failed', description: 'Could not send reset email. Check your internet connection and try again.' });
+      }
     } finally {
       setLoading(false);
     }

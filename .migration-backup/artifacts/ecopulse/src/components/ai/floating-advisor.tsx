@@ -5,7 +5,7 @@ import { Button, Card, CardContent, CardHeader, CardTitle, ScrollArea, Spinner }
 import { cn } from '@/lib/utils';
 import { Link } from 'wouter';
 import { useUser, useDoc, useFirestore } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, type DocumentReference } from 'firebase/firestore';
 import { getLevelFromPoints } from '@/lib/levels';
 import { AdvisorMessage } from './advisor-message';
 import { AdvisorInput } from './advisor-input';
@@ -25,7 +25,7 @@ export function FloatingAIAdvisor() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const profileRef = useMemo(
-    () => (user && db ? doc(db, 'users', user.uid) : null),
+    () => (user && db ? doc(db, 'users', user.uid) as DocumentReference<UserProfile> : null),
     [user, db]
   );
   const { data: profile } = useDoc<UserProfile>(profileRef);
@@ -57,7 +57,6 @@ export function FloatingAIAdvisor() {
       setIsLoading(true);
 
       // Optimistically add an empty AI message that we will stream into.
-      const aiMsgIndex = messages.length + 1;
       setMessages((prev) => [
         ...prev,
         { role: 'ai', text: '', timestamp: new Date().toISOString() },
@@ -140,13 +139,13 @@ export function FloatingAIAdvisor() {
             isExpanded ? 'w-[420px] h-[600px]' : 'w-[340px] h-[480px]'
           )}
           role="dialog"
-          aria-label="EcoPulse AI Advisor"
-          aria-modal="false"
+          aria-modal="true"
+          aria-labelledby="advisor-dialog-title"
         >
           <CardHeader className="flex flex-row items-center justify-between p-4 border-b border-border/50">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <CardTitle id="advisor-dialog-title" className="text-sm font-semibold flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-              EcoPulse Advisor
+              EcoPulse AI Advisor
             </CardTitle>
             <div className="flex items-center gap-1">
               <Button
@@ -177,7 +176,7 @@ export function FloatingAIAdvisor() {
           <CardContent className="flex flex-col h-[calc(100%-57px)] p-0">
             <ScrollArea className="flex-1 p-4">
               {visibleMessages.map((msg, i) => (
-                <AdvisorMessage key={i} message={msg} />
+                <AdvisorMessage key={i} message={msg} isUser={msg.role === 'user'} />
               ))}
               {isLoading && (
                 <div
@@ -193,9 +192,9 @@ export function FloatingAIAdvisor() {
 
             <div className="p-3 border-t border-border/50 space-y-2">
               <AdvisorInput
-                value={input}
-                onChange={setInput}
-                onSend={handleSend}
+                input={input}
+                setInput={setInput}
+                handleSend={handleSend}
                 isLoading={isLoading}
               />
               <div className="flex justify-end">

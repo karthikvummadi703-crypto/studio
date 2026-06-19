@@ -2,7 +2,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   limit,
   Firestore,
   Query,
@@ -14,6 +13,7 @@ import { COLLECTIONS } from './constants';
 /**
  * Factory for user conversation queries.
  * Capped at 50 to prevent unbounded Firestore reads.
+ * Sorted client-side to avoid composite index on userId + updatedAt.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
  */
@@ -21,45 +21,44 @@ export function buildUserConversationsQuery(db: Firestore, userId: string): Quer
   return query(
     collection(db, COLLECTIONS.AI_CONVERSATIONS),
     where('userId', '==', userId),
-    orderBy('updatedAt', 'desc'),
     limit(50)
   );
 }
 
 /**
  * Factory for user activity log queries.
+ * Sorted client-side to avoid composite index on userId + timestamp.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
- * @param limitCount Optional limit for the query.
+ * @param limitCount Approximate upper bound (over-fetches then slices client-side).
  */
 export function buildUserActivitiesQuery(db: Firestore, userId: string, limitCount = 5): Query<DocumentData> {
   return query(
     collection(db, COLLECTIONS.ACTIVITIES),
     where('userId', '==', userId),
-    orderBy('timestamp', 'desc'),
-    limit(limitCount)
+    limit(limitCount * 4)
   );
 }
 
 /**
  * Factory for user carbon footprint record queries.
+ * Sorted client-side to avoid composite index on userId + timestamp.
  * @param db Firestore instance.
  * @param userId Authenticated user ID.
- * @param options Configuration for sorting and limits.
+ * @param options sortOrder is applied client-side; limitCount is an approximate upper bound.
  */
 export function buildUserCalculatorRecordsQuery(
   db: Firestore,
   userId: string,
   options: { sortOrder?: 'asc' | 'desc'; limitCount?: number } = {}
 ): Query<DocumentData> {
-  const { sortOrder = 'desc', limitCount } = options;
+  const { limitCount } = options;
   const constraints: QueryConstraint[] = [
     where('userId', '==', userId),
-    orderBy('timestamp', sortOrder)
   ];
 
   if (limitCount) {
-    constraints.push(limit(limitCount));
+    constraints.push(limit(limitCount * 4));
   }
 
   return query(collection(db, COLLECTIONS.CALCULATOR_RECORDS), ...constraints);

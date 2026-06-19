@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, useCallback, memo } from 'react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { 
   Sparkles, 
   Send, 
@@ -60,6 +60,11 @@ export default function AIAdvisorPage() {
   const [loading, setLoading] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Optimistic AI message shown instantly after streaming completes.
+   * Cleared once Firestore confirms the message has been persisted.
+   */
+  const [pendingAIMessage, setPendingAIMessage] = useState<IChatMessage | null>(null);
 
   const { profile, chats, isLoading } = useAdvisorData(user?.uid, db);
 
@@ -69,11 +74,24 @@ export default function AIAdvisorPage() {
   const VISIBLE_LIMIT = 50;
   const visibleMessages = useMemo(() => messages.slice(-VISIBLE_LIMIT), [messages]);
 
+  /**
+   * Once Firestore confirms the pending AI message has been persisted,
+   * remove the optimistic copy so the real one from Firestore takes over.
+   */
+  useEffect(() => {
+    if (
+      pendingAIMessage &&
+      messages.some((m: IChatMessage) => m.text === pendingAIMessage.text && m.role === 'ai')
+    ) {
+      setPendingAIMessage(null);
+    }
+  }, [messages, pendingAIMessage]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, loading, streamingText]);
+  }, [messages, loading, streamingText, pendingAIMessage]);
 
   /**
    * Resets the active chat state to start a new conversation.
@@ -82,10 +100,12 @@ export default function AIAdvisorPage() {
     setActiveChatId(null);
     setInput('');
     setError(null);
+    setPendingAIMessage(null);
   }, []);
 
   /**
    * Sends a user message to the AI and manages the response stream.
+   * Uses arrayUnion so concurrent updates from other sessions never overwrite messages.
    * @param customMsg Optional message override (for suggestion buttons).
    */
   const handleSend = useCallback(async (customMsg?: string) => {
@@ -96,6 +116,7 @@ export default function AIAdvisorPage() {
     setInput('');
     setStreamingText('');
     setError(null);
+    setPendingAIMessage(null);
 
     const userMessage: IChatMessage = { role: 'user', text, timestamp: new Date().toISOString() };
     const historyForAI = messages.slice(-5).map((m: IChatMessage) => ({
@@ -116,8 +137,8 @@ export default function AIAdvisorPage() {
         chatId = docRef.id;
         setActiveChatId(chatId);
       } else {
-        updateDoc(doc(db, 'ai_conversations', chatId), {
-          messages: [...messages, userMessage],
+        await updateDoc(doc(db, 'ai_conversations', chatId), {
+          messages: arrayUnion(userMessage),
           updatedAt: serverTimestamp(),
         });
       }
@@ -155,17 +176,27 @@ export default function AIAdvisorPage() {
         setStreamingText(fullAIResponse);
       }
 
-      const aiMessage: IChatMessage = { role: 'ai', text: fullAIResponse, timestamp: new Date().toISOString() };
-      updateDoc(doc(db, 'ai_conversations', chatId), {
-        messages: [...messages, userMessage, aiMessage],
+      const aiMessage: IChatMessage = {
+        role: 'ai',
+        text: fullAIResponse,
+        timestamp: new Date().toISOString(),
+      };
+
+      // Show the AI message instantly (optimistic) while Firestore persists it in the background.
+      setPendingAIMessage(aiMessage);
+      setStreamingText('');
+
+      // Persist with arrayUnion so we never overwrite concurrent messages.
+      await updateDoc(doc(db, 'ai_conversations', chatId!), {
+        messages: arrayUnion(aiMessage),
         updatedAt: serverTimestamp(),
       });
 
     } catch (e: unknown) {
       setError(getErrorMessage(e));
+      setStreamingText('');
     } finally {
       setLoading(false);
-      setStreamingText('');
     }
   }, [input, user, db, loading, messages, activeChatId, profile]);
 
@@ -217,7 +248,9 @@ export default function AIAdvisorPage() {
                   <div className="overflow-hidden">
                     <p className="text-[11px] font-bold truncate">{chat.title || 'Conversation'}</p>
                     <p className={cn("text-[9px] uppercase tracking-tighter mt-0.5 font-black", activeChatId === chat.id ? "text-primary-foreground/80" : "text-zinc-500")}>
-                      {(chat.updatedAt as any)?.toDate ? (chat.updatedAt as any).toDate().toLocaleDateString() : 'Just now'}
+                      {typeof (chat.updatedAt as { toDate?: () => Date })?.toDate === 'function'
+                        ? (chat.updatedAt as { toDate: () => Date }).toDate().toLocaleDateString()
+                        : 'Just now'}
                     </p>
                   </div>
                 </button>
@@ -245,7 +278,7 @@ export default function AIAdvisorPage() {
 
         <CardContent className="flex-1 p-0 flex flex-col overflow-hidden">
           <ScrollArea className="flex-1 p-6 md:p-10">
-            {messages.length === 0 && !loading && !streamingText ? (
+            {messages.length === 0 && !loading && !streamingText && !pendingAIMessage ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-8 py-20">
                 <div className="w-20 h-20 bg-primary/10 rounded-[2.5rem] flex items-center justify-center mx-auto" aria-hidden="true">
                   <Leaf className="h-10 w-10 text-primary animate-pulse" />
@@ -287,15 +320,21 @@ export default function AIAdvisorPage() {
                   <ChatMessage key={i} message={m} isUser={m.role === 'user'} />
                 ))}
                 
+                {/* Live streaming text — visible while AI is generating */}
                 {streamingText && (
                   <div className="flex gap-4 flex-row animate-fade-in" role="status" aria-live="polite">
                     <div className="w-10 h-10 rounded-2xl bg-primary flex items-center justify-center shrink-0">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
-                    <div className="p-6 rounded-[2rem] rounded-tl-none text-sm leading-relaxed max-w-[80%] shadow-sm border bg-primary/5 border-primary/10 text-foreground font-medium" >
+                    <div className="p-6 rounded-[2rem] rounded-tl-none text-sm leading-relaxed max-w-[80%] shadow-sm border bg-primary/5 border-primary/10 text-foreground font-medium">
                       {streamingText}
                     </div>
                   </div>
+                )}
+
+                {/* Optimistic AI message — shown instantly after streaming while Firestore persists */}
+                {pendingAIMessage && !streamingText && (
+                  <ChatMessage message={pendingAIMessage} isUser={false} />
                 )}
 
                 {loading && !streamingText && (

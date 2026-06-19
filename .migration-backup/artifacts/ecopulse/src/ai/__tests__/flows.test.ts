@@ -1,24 +1,24 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { generateCarbonAnalysis } from '../flows/generate-carbon-analysis';
-import { generateReductionPlan } from '../flows/generate-reduction-plan';
-import { aiAdvisorChat } from '../flows/ai-advisor-chat';
-import { ai } from '../genkit';
-import { GenerateCarbonAnalysisInputSchema } from '../flows/generate-carbon-analysis';
-import { GenerateReductionPlanInputSchema } from '../flows/generate-reduction-plan';
-import { AIAdvisorChatInputSchema } from '../flows/ai-advisor-chat';
 
-// Create a stable mock for the prompt function that definePrompt returns
-const mockPromptFn = vi.fn();
+// vi.hoisted ensures this variable is initialised before the vi.mock factory runs
+const mockPromptFn = vi.hoisted(() => vi.fn());
 
 vi.mock('../genkit', () => ({
   ai: {
     definePrompt: vi.fn(() => mockPromptFn),
-    defineFlow: vi.fn((config, handler) => {
-      // In Genkit, defineFlow returns a function that executes the handler
-      return (input: any) => handler(input);
+    defineFlow: vi.fn((config: unknown, handler: (input: unknown) => unknown) => {
+      // In Genkit, defineFlow returns a callable that executes the handler
+      return (input: unknown) => handler(input);
     }),
   },
 }));
+
+import { generateCarbonAnalysis } from '../flows/generate-carbon-analysis';
+import { generateReductionPlan } from '../flows/generate-reduction-plan';
+import { aiAdvisorChat } from '../flows/ai-advisor-chat';
+import { GenerateCarbonAnalysisInputSchema } from '../flows/generate-carbon-analysis';
+import { GenerateReductionPlanInputSchema } from '../flows/generate-reduction-plan';
+import { AIAdvisorChatInputSchema } from '../flows/ai-advisor-chat';
 
 describe('Genkit Flows', () => {
   beforeEach(() => {
@@ -48,6 +48,22 @@ describe('Genkit Flows', () => {
 
       expect(result).toEqual(mockOutput);
       expect(mockPromptFn).toHaveBeenCalled();
+    });
+
+    it('throws when the prompt function rejects', async () => {
+      mockPromptFn.mockRejectedValueOnce(
+        new Error('AI service unavailable')
+      );
+      await expect(
+        generateCarbonAnalysis({
+          userName: 'Bob',
+          totalEmissions: 5,
+          emissionsBreakdown: {
+            transportation: 2, homeEnergy: 1,
+            food: 1, lifestyle: 1,
+          },
+        })
+      ).rejects.toThrow('AI service unavailable');
     });
   });
 

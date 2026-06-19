@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui';
 import { 
   User, 
@@ -19,12 +20,15 @@ import {
   Shield,
   LogOut,
   ChevronRight,
-  ShieldAlert
+  ShieldAlert,
+  Pencil,
+  Check,
+  X as XIcon,
 } from 'lucide-react';
 import { useUser, useDoc, useFirestore, useAuth } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { getLevelFromPoints } from '@/lib/levels';
-import { signOut } from 'firebase/auth';
+import { signOut, updateProfile } from 'firebase/auth';
 import { useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { COLLECTIONS, IS_DEMO_KEY } from '@/lib/constants';
@@ -41,9 +45,38 @@ export default function ProfilePage() {
   const [, navigate] = useLocation();
 
   const profileRef = useMemo(() => (user && db ? doc(db, COLLECTIONS.USERS, user.uid) : null), [user, db]);
-  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as any);
+  const { data: profile, isLoading: profileLoading } = useDoc<UserProfile>(profileRef as unknown as import('firebase/firestore').DocumentReference<UserProfile> | null);
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [savingName, setSavingName] = useState(false);
+
+  const handleEditName = useCallback(() => {
+    setNameInput(profile?.fullName || '');
+    setEditingName(true);
+  }, [profile?.fullName]);
+
+  const handleSaveName = useCallback(async () => {
+    if (!user || !db || !nameInput.trim()) return;
+    setSavingName(true);
+    try {
+      const userRef = doc(db, COLLECTIONS.USERS, user.uid);
+      await setDoc(userRef, { fullName: nameInput.trim() }, { merge: true });
+      if (auth?.currentUser) {
+        await updateProfile(auth.currentUser, {
+          displayName: nameInput.trim(),
+        }).catch(() => {});
+      }
+      setEditingName(false);
+    } catch {
+      // silently ignore — name remains unchanged
+    } finally {
+      setSavingName(false);
+    }
+  }, [user, db, auth, nameInput]);
+
+  const handleCancelEdit = useCallback(() => setEditingName(false), []);
 
   /**
    * Clears session cookie and signs out of Firebase.
@@ -61,7 +94,10 @@ export default function ProfilePage() {
   const joinedDate = useMemo(() => {
     if (!profile?.createdAt) return "---";
     try {
-      const date = (profile.createdAt as any)?.toDate ? (profile.createdAt as any).toDate() : new Date(profile.createdAt as string);
+      const ts = profile.createdAt as { toDate?: () => Date } | string | number;
+      const date = typeof (ts as { toDate?: () => Date }).toDate === 'function'
+        ? (ts as { toDate: () => Date }).toDate()
+        : new Date(ts as string);
       return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     } catch (e) {
       return "---";
@@ -141,7 +177,31 @@ export default function ProfilePage() {
                      {profile.fullName?.[0] || 'E'}
                    </div>
                    <div className="space-y-2">
-                      <CardTitle className="font-headline text-3xl text-foreground">{profile.fullName || 'Eco Warrior'}</CardTitle>
+                      {editingName ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={nameInput}
+                            onChange={(e) => setNameInput(e.target.value)}
+                            className="text-xl font-bold h-10 w-48"
+                            aria-label="Edit display name"
+                            onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); if (e.key === 'Escape') handleCancelEdit(); }}
+                            autoFocus
+                          />
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={handleSaveName} disabled={savingName} aria-label="Save name">
+                            {savingName ? <Spinner className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-zinc-400" onClick={handleCancelEdit} aria-label="Cancel edit">
+                            <XIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="font-headline text-3xl text-foreground">{profile.fullName || 'Eco Warrior'}</CardTitle>
+                          <Button size="icon" variant="ghost" className="h-7 w-7 text-zinc-400 hover:text-primary" onClick={handleEditName} aria-label="Edit display name">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                       <div className="flex gap-4">
                         <p className="text-zinc-600 text-sm flex items-center gap-2">
                           <Mail className="h-4 w-4 text-primary" /> {profile.email}

@@ -7,6 +7,13 @@ import * as firebaseAuth from 'firebase/auth';
 
 vi.mock('@/app/actions/session', () => ({ setSessionCookieAction: vi.fn() }));
 
+/* Mock GIS helpers — return null clientId so tests use popup fallback path */
+vi.mock('@/lib/google-gis', () => ({
+  fetchGoogleClientId: vi.fn().mockResolvedValue(null),
+  loadGsiScript: vi.fn().mockResolvedValue(undefined),
+  renderGoogleButton: vi.fn().mockResolvedValue('mock-id-token'),
+}));
+
 function renderLogin() {
   return render(
     <>
@@ -87,13 +94,20 @@ describe('LoginPage', () => {
     expect(/login failed|wrong password|invalid|error/i.test(body) || body.length > 0).toBe(true);
   });
 
-  it('calls signInWithPopup for Google login', async () => {
+  it('triggers signInWithPopup (popup fallback) when Google button clicked', async () => {
+    /*
+     * GIS mock returns null clientId so the overlay button always shows and
+     * handleGoogleLogin falls through to the signInWithPopup fallback path.
+     */
     vi.mocked(firebaseAuth.signInWithPopup).mockResolvedValueOnce({
       user: { uid: '123', displayName: 'Test', email: 'test@test.com', getIdToken: vi.fn().mockResolvedValue('tok') },
     } as never);
 
     renderLogin();
-    fireEvent.click(screen.getByRole('button', { name: /google/i }));
+
+    /* Wait for the overlay button to appear (GIS never loads because clientId is null) */
+    const googleBtn = await waitFor(() => screen.getByRole('button', { name: /sign in with google/i }));
+    fireEvent.click(googleBtn);
 
     await waitFor(() => {
       expect(firebaseAuth.signInWithPopup).toHaveBeenCalled();

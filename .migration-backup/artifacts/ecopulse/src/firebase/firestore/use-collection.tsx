@@ -40,7 +40,7 @@ export const useCollection = <T = DocumentData>(query: Query<T> | null) => {
         const itemsJson = JSON.stringify(items);
         if (itemsJson !== prevDataRef.current) {
           prevDataRef.current = itemsJson;
-          setData(items as any);
+          setData(items as (T & { id: string })[]);
         }
         setIsLoading(false);
       },

@@ -1,26 +1,34 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
+import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
+import { logger } from "../lib/logger";
 
 const router = Router();
 
-const GEMINI_MODEL = "gemini-2.0-flash";
-const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+const apiKey = process.env["GOOGLE_AI_API_KEY"];
+if (!apiKey) {
+  logger.warn("GOOGLE_AI_API_KEY is not set — AI endpoints will return 503");
+}
 
-// ─── Auth middleware ──────────────────────────────────────────────────────────
+const genai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 
 interface AuthedRequest extends Request {
   uid?: string;
 }
 
 /**
- * Verifies a Firebase ID token using the Firebase REST API.
- * Requires FIREBASE_API_KEY (the web API key from Firebase Console > Project Settings).
+ * Verify a Firebase ID token via the Firebase REST accounts:lookup endpoint.
+ * Works server-side with just the web API key — no Admin SDK required.
  */
-async function verifyFirebaseToken(idToken: string): Promise<{ uid: string; email?: string }> {
-  const apiKey = process.env.FIREBASE_API_KEY || process.env.VITE_FIREBASE_API_KEY;
-  if (!apiKey) throw new Error("FIREBASE_API_KEY not configured");
+async function verifyFirebaseToken(idToken: string): Promise<string> {
+  const firebaseApiKey =
+    process.env["FIREBASE_API_KEY"] ?? process.env["VITE_FIREBASE_API_KEY"];
+  if (!firebaseApiKey) throw new Error("FIREBASE_API_KEY not configured");
 
   const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`,
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseApiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -29,25 +37,32 @@ async function verifyFirebaseToken(idToken: string): Promise<{ uid: string; emai
   );
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { error?: { message?: string } };
-    throw new Error(err?.error?.message ?? "Invalid token");
+    const errBody = (await res.json().catch(() => ({}))) as {
+      error?: { message?: string };
+    };
+    throw new Error(errBody?.error?.message ?? "Invalid token");
   }
 
-  const data = await res.json() as { users: { localId: string; email?: string }[] };
-  const user = data?.users?.[0];
-  if (!user?.localId) throw new Error("Token user not found");
-  return { uid: user.localId, email: user.email };
+  const data = (await res.json()) as {
+    users?: { localId: string }[];
+  };
+  const uid = data?.users?.[0]?.localId;
+  if (!uid) throw new Error("Token user not found");
+  return uid;
 }
 
-async function requireAuth(req: AuthedRequest, res: Response, next: NextFunction): Promise<void> {
-  const auth = req.headers.authorization;
-  if (!auth?.startsWith("Bearer ")) {
+async function requireAuth(
+  req: AuthedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const authHeader = req.headers.authorization;
+  if (!authHeader?.startsWith("Bearer ")) {
     res.status(401).json({ error: "Missing Authorization header" });
     return;
   }
   try {
-    const { uid } = await verifyFirebaseToken(auth.slice(7));
-    req.uid = uid;
+    req.uid = await verifyFirebaseToken(authHeader.slice(7));
     next();
   } catch (err) {
     const message = err instanceof Error ? err.message : "Auth failed";
@@ -57,17 +72,30 @@ async function requireAuth(req: AuthedRequest, res: Response, next: NextFunction
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
 
-interface Window { timestamps: number[] }
-const rateLimitStore = new Map<string, Window>();
+interface RateLimitEntry {
+  timestamps: number[];
+  lastAccess: number;
+}
 
-/**
- * Sliding-window rate limiter keyed by uid (or IP fallback).
- * Returns true if the request is allowed.
- */
+const rateLimitStore = new Map<string, RateLimitEntry>();
+
+// Periodically evict stale entries (keys not accessed in 5 minutes)
+setInterval(
+  () => {
+    const cutoff = Date.now() - 5 * 60_000;
+    for (const [key, entry] of rateLimitStore) {
+      if (entry.lastAccess < cutoff) rateLimitStore.delete(key);
+    }
+  },
+  60_000
+);
+
 function checkRateLimit(key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
-  const entry = rateLimitStore.get(key) ?? { timestamps: [] };
-  entry.timestamps = entry.timestamps.filter(t => now - t < windowMs);
+  const entry = rateLimitStore.get(key) ?? { timestamps: [], lastAccess: now };
+  entry.timestamps = entry.timestamps.filter((t) => now - t < windowMs);
+  entry.lastAccess = now;
+
   if (entry.timestamps.length >= limit) {
     rateLimitStore.set(key, entry);
     return false;
@@ -82,184 +110,205 @@ function rateLimit(limit: number, windowMs: number) {
     const key = req.uid ?? req.ip ?? "anon";
     if (!checkRateLimit(key, limit, windowMs)) {
       res.setHeader("Retry-After", String(Math.ceil(windowMs / 1000)));
-      res.status(429).json({ error: "Too many requests. Please wait before trying again." });
+      res
+        .status(429)
+        .json({ error: "Too many requests. Please wait before trying again." });
       return;
     }
     next();
   };
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Validation schemas ───────────────────────────────────────────────────────
 
-function getGeminiKey(): string {
-  const key = process.env.GOOGLE_GENAI_API_KEY || process.env.GEMINI_API_KEY;
-  if (!key) throw new Error("GOOGLE_GENAI_API_KEY environment variable is not set");
-  return key;
-}
+const ChatMessageSchema = z.object({
+  role: z.enum(["user", "ai"]),
+  text: z.string().max(4000),
+});
+
+const UserContextSchema = z.object({
+  points: z.number().nonnegative(),
+  score: z.number().nonnegative(),
+  level: z.string().max(50),
+  challengesCompleted: z.number().nonnegative(),
+});
+
+const ChatRequestSchema = z.object({
+  history: z.array(ChatMessageSchema).max(20).optional().default([]),
+  userInput: z.string().min(1).max(2000),
+  userContext: UserContextSchema.optional(),
+});
+
+const InsightsRequestSchema = z.object({
+  totalEmissions: z.number().nonnegative(),
+  emissionsBreakdown: z
+    .object({
+      transportation: z.number().nonnegative(),
+      homeEnergy: z.number().nonnegative(),
+      food: z.number().nonnegative(),
+      lifestyle: z.number().nonnegative(),
+    })
+    .optional(),
+});
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
 /**
  * POST /api/ai/chat
- * Auth: Firebase ID token required. Rate: 15 req/60s per uid.
- * Streams Gemini response as plain text chunks.
+ * Auth: Firebase ID token required.  Rate: 15 req / 60 s per uid.
+ * Streams Gemini response as plain-text chunks.
  */
 router.post(
-  "/chat",
+  "/ai/chat",
   requireAuth,
   rateLimit(15, 60_000),
   async (req: AuthedRequest, res: Response) => {
+    if (!genai) {
+      res.status(503).json({ error: "AI service not configured" });
+      return;
+    }
+
+    const parsed = ChatRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request" });
+      return;
+    }
+
+    const { history, userInput, userContext } = parsed.data;
+
+    const ctx = userContext ?? {
+      points: 0,
+      score: 0,
+      level: "Seedling",
+      challengesCompleted: 0,
+    };
+
+    const systemPrompt = `You are EcoPulse AI, a knowledgeable and friendly sustainability advisor.
+The user's current stats:
+- Sustainability Score: ${ctx.score}
+- Green Points: ${ctx.points}
+- Level: ${ctx.level}
+- Challenges Completed: ${ctx.challengesCompleted}
+
+Give practical, specific, encouraging advice personalised to their stats.
+Keep responses concise (2-4 sentences) but genuinely helpful. Use plain text — no markdown.`;
+
+    const contents = [
+      ...history.slice(-10).map((m) => ({
+        role: m.role === "ai" ? "model" : ("user" as const),
+        parts: [{ text: String(m.text).slice(0, 2000) }],
+      })),
+      {
+        role: "user" as const,
+        parts: [{ text: userInput.trim().slice(0, 2000) }],
+      },
+    ];
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Transfer-Encoding", "chunked");
+
     try {
-      const geminiKey = getGeminiKey();
-      const { history = [], userInput, userContext = {} } = req.body as {
-        history: { role: string; text: string }[];
-        userInput: string;
-        userContext: Record<string, unknown>;
-      };
-
-      if (!userInput || typeof userInput !== "string" || userInput.trim().length === 0) {
-        res.status(400).json({ error: "userInput is required and must be non-empty" });
-        return;
-      }
-
-      const systemInstruction =
-        `You are EcoPulse AI, an expert sustainability advisor. ` +
-        `The user has ${userContext.points ?? 0} green points, ` +
-        `sustainability score ${userContext.score ?? 0}, ` +
-        `level "${userContext.level ?? "Seedling"}", ` +
-        `and has completed ${userContext.challengesCompleted ?? 0} challenges. ` +
-        `Give practical, motivating carbon-reduction advice. Be concise and friendly.`;
-
-      const contents = [
-        ...history.slice(-10).map((m) => ({
-          role: m.role === "ai" ? "model" : "user",
-          parts: [{ text: String(m.text).slice(0, 2000) }],
-        })),
-        { role: "user", parts: [{ text: userInput.trim().slice(0, 2000) }] },
-      ];
-
-      const url = `${GEMINI_BASE}/${GEMINI_MODEL}:streamGenerateContent?key=${geminiKey}&alt=sse`;
-      const geminiRes = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents,
-          generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
-        }),
+      const stream = await genai.models.generateContentStream({
+        model: "gemini-2.5-flash",
+        contents,
+        config: {
+          systemInstruction: systemPrompt,
+          maxOutputTokens: 512,
+          temperature: 0.7,
+        },
       });
 
-      if (!geminiRes.ok) {
-        const err = await geminiRes.text();
-        res.status(502).json({ error: "AI service error", detail: err.slice(0, 200) });
-        return;
-      }
-
-      res.setHeader("Content-Type", "text/plain; charset=utf-8");
-      res.setHeader("Transfer-Encoding", "chunked");
-      res.setHeader("Cache-Control", "no-cache");
-
-      const reader = geminiRes.body!.getReader();
-      const decoder = new TextDecoder();
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const raw = decoder.decode(value);
-        for (const line of raw.split("\n")) {
-          if (!line.startsWith("data: ")) continue;
-          const json = line.slice(6).trim();
-          if (json === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(json) as {
-              candidates?: { content?: { parts?: { text?: string }[] } }[];
-            };
-            const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-            if (text) res.write(text);
-          } catch {
-            // skip malformed SSE lines
-          }
-        }
+      for await (const chunk of stream) {
+        const text = chunk.text;
+        if (text) res.write(text);
       }
       res.end();
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      if (!res.headersSent) res.status(500).json({ error: message });
+      logger.error({ err }, "AI chat stream error");
+      if (!res.headersSent) {
+        res.status(500).json({ error: "AI service error" });
+      } else {
+        res.end();
+      }
     }
   }
 );
 
 /**
  * POST /api/ai/insights
- * Auth: Firebase ID token required. Rate: 10 req/60s per uid.
- * Returns JSON carbon reduction plan.
+ * Auth: Firebase ID token required.  Rate: 10 req / 60 s per uid.
  */
 router.post(
-  "/insights",
+  "/ai/insights",
   requireAuth,
   rateLimit(10, 60_000),
   async (req: AuthedRequest, res: Response) => {
+    if (!genai) {
+      res.status(503).json({ error: "AI service not configured" });
+      return;
+    }
+
+    const parsed = InsightsRequestSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid request" });
+      return;
+    }
+
+    const { totalEmissions, emissionsBreakdown } = parsed.data;
+
+    const breakdown = emissionsBreakdown ?? {
+      transportation: totalEmissions,
+      homeEnergy: 0,
+      food: 0,
+      lifestyle: 0,
+    };
+
+    const recShape =
+      `[{"action":"string","impactLevel":"High|Medium|Low","difficultyLevel":"Easy|Moderate|Hard","estimatedCarbonSavings":"e.g. 120 kg CO₂/yr"}]`;
+
+    const prompt = `You are an environmental scientist. Analyse this carbon footprint and produce a structured reduction plan.
+
+Total emissions: ${totalEmissions} kg CO₂
+Breakdown:
+- Transportation: ${breakdown.transportation} kg
+- Home energy: ${breakdown.homeEnergy} kg
+- Food: ${breakdown.food} kg
+- Lifestyle: ${breakdown.lifestyle} kg
+
+Respond ONLY with valid JSON matching this exact structure (no markdown, no explanation outside the JSON):
+{
+  "personalizedAnalysis": "2-3 sentence analysis of their specific footprint pattern",
+  "weeklyActionPlan": "3-4 specific weekly actions they can take immediately",
+  "monthlyImprovementStrategy": "2-3 monthly goals to track measurable progress",
+  "transportationRecommendations": ${recShape},
+  "homeEnergyRecommendations": ${recShape},
+  "foodRecommendations": ${recShape},
+  "lifestyleRecommendations": ${recShape}
+}
+
+Rules:
+- Each recommendation array must contain 2-3 items.
+- impactLevel must be exactly "High", "Medium", or "Low".
+- difficultyLevel must be exactly "Easy", "Moderate", or "Hard".
+- estimatedCarbonSavings must be a realistic numeric string, e.g. "85 kg CO₂/yr".`;
+
     try {
-      const geminiKey = getGeminiKey();
-      const { totalEmissions = 0, emissionsBreakdown = {} } = req.body as {
-        totalEmissions: number;
-        emissionsBreakdown: {
-          transportation?: number;
-          homeEnergy?: number;
-          food?: number;
-          lifestyle?: number;
-        };
-      };
-
-      if (typeof totalEmissions !== "number" || totalEmissions < 0) {
-        res.status(400).json({ error: "totalEmissions must be a non-negative number" });
-        return;
-      }
-
-      const prompt =
-        `You are a carbon reduction expert. A user has total emissions of ${totalEmissions} kgCO2e. ` +
-        `Breakdown: transportation=${emissionsBreakdown.transportation ?? 0} kgCO2e, ` +
-        `homeEnergy=${emissionsBreakdown.homeEnergy ?? 0} kgCO2e, ` +
-        `food=${emissionsBreakdown.food ?? 0} kgCO2e, ` +
-        `lifestyle=${emissionsBreakdown.lifestyle ?? 0} kgCO2e.\n\n` +
-        `Return a JSON object with exactly this shape (raw JSON only, no markdown):\n` +
-        `{"personalizedAnalysis":"<2-3 sentence analysis>",` +
-        `"transportation":[{"action":"...","impactLevel":"High","difficultyLevel":"Easy","estimatedCarbonSavings":"..."}],` +
-        `"homeEnergy":[{"action":"...","impactLevel":"High","difficultyLevel":"Easy","estimatedCarbonSavings":"..."}],` +
-        `"food":[{"action":"...","impactLevel":"High","difficultyLevel":"Easy","estimatedCarbonSavings":"..."}],` +
-        `"lifestyle":[{"action":"...","impactLevel":"High","difficultyLevel":"Easy","estimatedCarbonSavings":"..."}]}` +
-        `\nProvide 2-3 items per category. impactLevel: High|Medium|Low. difficultyLevel: Easy|Moderate|Hard.`;
-
-      const url = `${GEMINI_BASE}/${GEMINI_MODEL}:generateContent?key=${geminiKey}`;
-      const geminiRes = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.4 },
-        }),
+      const response = await genai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: { maxOutputTokens: 2048, temperature: 0.4 },
       });
 
-      if (!geminiRes.ok) {
-        const err = await geminiRes.text();
-        res.status(502).json({ error: "AI service error", detail: err.slice(0, 200) });
-        return;
-      }
+      const text = response.text ?? "";
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error("No JSON in AI response");
 
-      const data = await geminiRes.json() as {
-        candidates?: { content?: { parts?: { text?: string }[] } }[];
-      };
-      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-      const cleaned = raw.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-
-      try {
-        res.json(JSON.parse(cleaned));
-      } catch {
-        res.status(502).json({ error: "AI returned malformed JSON", raw: cleaned.slice(0, 200) });
-      }
+      const result = JSON.parse(jsonMatch[0]);
+      res.json(result);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      res.status(500).json({ error: message });
+      logger.error({ err }, "AI insights error");
+      res.status(500).json({ error: "Failed to generate insights" });
     }
   }
 );

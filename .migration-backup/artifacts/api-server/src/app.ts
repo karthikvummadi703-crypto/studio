@@ -1,19 +1,39 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
-const ALLOWED_ORIGINS: Array<string | RegExp> = [
-  ...(process.env.ALLOWED_ORIGINS?.split(",").map((o) => o.trim()) ?? []),
-  /^https:\/\/[a-z0-9-]+\.replit\.dev$/,
-  /^https:\/\/[a-z0-9-]+\.repl\.co$/,
-  /^https:\/\/[a-z0-9-]+\.vercel\.app$/,
-  /^https:\/\/[a-z0-9-]+\.railway\.app$/,
-  /^https:\/\/[a-z0-9-]+\.up\.railway\.app$/,
-];
-
 const app: Express = express();
+
+const allowedOrigins = process.env["ALLOWED_ORIGINS"]
+  ? process.env["ALLOWED_ORIGINS"].split(",").map((o) => o.trim())
+  : undefined;
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "https://identitytoolkit.googleapis.com"],
+      },
+    },
+  })
+);
+
+app.use(
+  cors({
+    origin: allowedOrigins ?? true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    maxAge: 86400,
+  })
+);
 
 app.use(
   pinoHttp({
@@ -32,27 +52,11 @@ app.use(
         };
       },
     },
-  }),
+  })
 );
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      const allowed = ALLOWED_ORIGINS.some((o) =>
-        typeof o === "string" ? o === origin : o.test(origin),
-      );
-      if (allowed) return callback(null, true);
-      callback(new Error(`CORS: origin not allowed — ${origin}`));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
-
-app.use(express.json({ limit: "1mb" }));
-app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+app.use(express.json({ limit: "32kb" }));
+app.use(express.urlencoded({ extended: true, limit: "32kb" }));
 
 app.use("/api", router);
 

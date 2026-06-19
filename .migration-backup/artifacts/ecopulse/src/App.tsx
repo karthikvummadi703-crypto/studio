@@ -55,7 +55,7 @@ function PageLoader() {
     <div className="flex flex-col items-center justify-center min-h-[60vh]" role="status" aria-live="polite">
       <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-3xl shadow-lg border border-zinc-100">
         <div className="p-3 bg-primary/10 rounded-2xl">
-          <Leaf className="h-10 w-10 text-primary" />
+          <Leaf className="h-10 w-10 text-primary" aria-hidden="true" />
         </div>
         <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Initialising Node...</p>
         <Spinner className="h-5 w-5 text-primary" label="Initializing environment node..." />
@@ -66,9 +66,7 @@ function PageLoader() {
 
 function RootRedirect() {
   const { user, isLoading } = useUser();
-
   if (isLoading) return <PageLoader />;
-
   return <Redirect to={user ? "/dashboard" : "/login"} />;
 }
 
@@ -79,42 +77,18 @@ function Router() {
       <Suspense fallback={<PageLoader />}>
         <Switch>
           <Route path="/" component={RootRedirect} />
-          <Route path="/login">
-            <LoginPage />
-          </Route>
-          <Route path="/register">
-            <RegisterPage />
-          </Route>
-          <Route path="/forgot-password">
-            <ForgotPasswordPage />
-          </Route>
-          <Route path="/dashboard">
-            <DashboardPage />
-          </Route>
-          <Route path="/ai-advisor">
-            <AIAdvisorPage />
-          </Route>
-          <Route path="/calculator">
-            <CalculatorPage />
-          </Route>
-          <Route path="/insights">
-            <InsightsPage />
-          </Route>
-          <Route path="/knowledge-hub">
-            <KnowledgeHubPage />
-          </Route>
-          <Route path="/recommendations">
-            <RecommendationsPage />
-          </Route>
-          <Route path="/progress">
-            <ProgressPage />
-          </Route>
-          <Route path="/profile">
-            <ProfilePage />
-          </Route>
-          <Route path="/settings">
-            <SettingsPage />
-          </Route>
+          <Route path="/login"><LoginPage /></Route>
+          <Route path="/register"><RegisterPage /></Route>
+          <Route path="/forgot-password"><ForgotPasswordPage /></Route>
+          <Route path="/dashboard"><DashboardPage /></Route>
+          <Route path="/ai-advisor"><AIAdvisorPage /></Route>
+          <Route path="/calculator"><CalculatorPage /></Route>
+          <Route path="/insights"><InsightsPage /></Route>
+          <Route path="/knowledge-hub"><KnowledgeHubPage /></Route>
+          <Route path="/recommendations"><RecommendationsPage /></Route>
+          <Route path="/progress"><ProgressPage /></Route>
+          <Route path="/profile"><ProfilePage /></Route>
+          <Route path="/settings"><SettingsPage /></Route>
           <Route component={NotFound} />
         </Switch>
       </Suspense>
@@ -128,9 +102,17 @@ function App() {
       <TooltipProvider>
         <FirebaseClientProvider>
           <ErrorBoundary>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <Router />
-            </WouterRouter>
+            <>
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-xl focus:font-bold focus:shadow-lg"
+              >
+                Skip to main content
+              </a>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <Router />
+              </WouterRouter>
+            </>
           </ErrorBoundary>
           <Toaster />
         </FirebaseClientProvider>

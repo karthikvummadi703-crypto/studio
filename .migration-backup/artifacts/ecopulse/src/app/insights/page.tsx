@@ -6,19 +6,24 @@ import { Spinner } from '@/components/ui';
 import { Sparkles, Zap, Car, Utensils, ShoppingBag, Send } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { getDocs } from 'firebase/firestore';
-import { GenerateReductionPlanOutput } from '@/ai/flows/generate-reduction-plan';
+import { GenerateReductionPlanOutput } from '@/ai/flows/types';
 import { Link } from 'wouter';
 import { buildUserCalculatorRecordsQuery } from '@/lib/firestore-queries';
 import { getErrorMessage } from '@/lib/handle-error';
 
 const InsightCategoryCard = lazy(() => import('./insight-card'));
 
+interface LatestRecord {
+  co2?: number;
+  breakdown?: { transportation: number; homeEnergy: number; food: number; lifestyle: number };
+}
+
 export default function InsightsPage() {
   const { user } = useUser();
   const db = useFirestore();
   const [loading, setLoading] = useState(false);
   const [insight, setInsight] = useState<GenerateReductionPlanOutput | null>(null);
-  const [latestRecord, setLatestRecord] = useState<any>(null);
+  const [latestRecord, setLatestRecord] = useState<LatestRecord | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -36,12 +41,16 @@ export default function InsightsPage() {
   }, [user, db]);
 
   const handleGenerate = useCallback(async () => {
-    if (!latestRecord) return;
+    if (!latestRecord || !user) return;
     setLoading(true);
     try {
+      const idToken = await user.getIdToken();
       const response = await fetch('/api/ai/insights', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+        },
         body: JSON.stringify({
           totalEmissions: latestRecord.co2 || 0,
           emissionsBreakdown: latestRecord.breakdown || {

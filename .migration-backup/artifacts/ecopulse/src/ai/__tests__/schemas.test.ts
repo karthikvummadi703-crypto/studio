@@ -1,4 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// Mock the genkit runtime so server-only packages are not loaded in jsdom
+vi.mock('../genkit', () => ({
+  ai: {
+    definePrompt: vi.fn(() => vi.fn()),
+    defineFlow: vi.fn((_c: unknown, handler: (i: unknown) => unknown) => (i: unknown) => handler(i)),
+  },
+}));
+
 import { AIAdvisorChatInputSchema } from '../flows/ai-advisor-chat';
 import { GenerateCarbonAnalysisInputSchema } from '../flows/generate-carbon-analysis';
 import { GenerateReductionPlanInputSchema } from '../flows/generate-reduction-plan';
