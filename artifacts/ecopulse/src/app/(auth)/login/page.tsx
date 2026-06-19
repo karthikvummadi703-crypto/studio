@@ -108,22 +108,27 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
       const result = await signInWithPopup(auth, provider);
-      await saveGoogleProfile(result.user);
+      // Profile write is best-effort — sign-in succeeds even if Firestore rules
+      // haven't been deployed yet (permission-denied is silently ignored).
+      try {
+        await saveGoogleProfile(result.user);
+      } catch (profileErr: unknown) {
+        console.warn("[Google Sign-In] profile write skipped:", profileErr);
+      }
       sessionStorage.removeItem(IS_DEMO_KEY);
       await handleSession(result.user);
       navigate("/dashboard");
     } catch (error: unknown) {
       const code = error instanceof FirebaseError ? error.code : "unknown";
+      const message = error instanceof Error ? error.message : String(error);
+      console.error("[Google Sign-In] error code:", code, "message:", message, error);
       if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
         return;
       }
       toast({
         variant: "destructive",
-        title: "Google Sign-In Failed",
-        description:
-          code !== "unknown"
-            ? getAuthErrorMessage(code)
-            : "Could not sign in with Google. Please try again or use email/password.",
+        title: `Google Sign-In Failed (${code})`,
+        description: message.slice(0, 120),
       });
     } finally {
       setGoogleLoading(false);

@@ -134,15 +134,12 @@ export default function RegisterPage() {
           timestamp: serverTimestamp(),
         });
 
+        // Profile write is best-effort — registration succeeds even if Firestore
+        // rules haven't been deployed yet (permission-denied is silently ignored).
         await batch.commit().catch((err) => {
           if (err.code === "permission-denied") {
-            const pErr = new FirestorePermissionError({
-              path: userDocRef.path,
-              operation: "write",
-              requestResourceData: userData,
-            });
-            errorEmitter.emit("permission-error", pErr);
-            throw pErr;
+            logger.warn("[Register] Firestore write skipped (rules not deployed):", err);
+            return; // non-fatal — user is still authenticated
           }
           throw err;
         });
