@@ -12,8 +12,8 @@
  *     an outage from being used as a bypass vector.
  */
 
-import { db } from '@/firebase';
-import { doc, runTransaction } from 'firebase/firestore';
+import { db } from "@/firebase";
+import { doc, runTransaction } from "firebase/firestore";
 
 const MAX_STORED_TIMESTAMPS = 200;
 const FAIL_OPEN_MAX_CONSECUTIVE = 1;
@@ -42,7 +42,7 @@ export async function checkRateLimit(
 ): Promise<{ allowed: boolean }> {
   if (!db) return { allowed: true };
 
-  const limitRef = doc(db, 'rate_limits', ip);
+  const limitRef = doc(db, "rate_limits", ip);
   const now = Date.now();
 
   try {
@@ -52,7 +52,7 @@ export async function checkRateLimit(
       let timestamps: number[] = [];
       if (docSnap.exists()) {
         const data = docSnap.data();
-        timestamps = (data.timestamps as number[] ?? [])
+        timestamps = ((data.timestamps as number[]) ?? [])
           .filter((ts) => now - ts < windowMs)
           .slice(-MAX_STORED_TIMESTAMPS);
       }
@@ -75,7 +75,7 @@ export async function checkRateLimit(
     console.error(`[RateLimiter] Transaction error #${count} for ip=${ip}:`, error);
 
     if (count > FAIL_OPEN_MAX_CONSECUTIVE) {
-      console.error('[RateLimiter] Persistent errors — failing CLOSED.');
+      console.error("[RateLimiter] Persistent errors — failing CLOSED.");
       return { allowed: false };
     }
 

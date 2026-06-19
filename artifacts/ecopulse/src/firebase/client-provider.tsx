@@ -1,15 +1,15 @@
-import React from 'react';
-import { FirebaseProvider } from './provider';
-import { app, auth, db, isFirebaseConfigured } from './config';
-import { Leaf, ExternalLink } from 'lucide-react';
+import React from "react";
+import { FirebaseProvider } from "./provider";
+import { app, auth, db, isFirebaseConfigured } from "./config";
+import { Leaf, ExternalLink } from "lucide-react";
 
 const REQUIRED_SECRETS = [
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_STORAGE_BUCKET',
-  'VITE_FIREBASE_MESSAGING_SENDER_ID',
-  'VITE_FIREBASE_APP_ID',
+  "VITE_FIREBASE_API_KEY",
+  "VITE_FIREBASE_AUTH_DOMAIN",
+  "VITE_FIREBASE_PROJECT_ID",
+  "VITE_FIREBASE_STORAGE_BUCKET",
+  "VITE_FIREBASE_MESSAGING_SENDER_ID",
+  "VITE_FIREBASE_APP_ID",
 ];
 
 function FirebaseSetupScreen() {
@@ -22,19 +22,26 @@ function FirebaseSetupScreen() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground">EcoPulse AI — Setup Required</h1>
-            <p className="text-sm text-zinc-500 mt-0.5">Firebase credentials need to be configured</p>
+            <p className="text-sm text-zinc-500 mt-0.5">
+              Firebase credentials need to be configured
+            </p>
           </div>
         </div>
 
         <div className="px-8 py-6 space-y-6">
           <p className="text-sm text-zinc-600 leading-relaxed">
             Add your Firebase project credentials as <strong>Replit Secrets</strong> to get started.
-            These values come from your Firebase Console under{' '}
-            <strong>Project Settings → General → Your apps → Web app → SDK setup and configuration</strong>.
+            These values come from your Firebase Console under{" "}
+            <strong>
+              Project Settings → General → Your apps → Web app → SDK setup and configuration
+            </strong>
+            .
           </p>
 
           <div className="space-y-2">
-            <p className="text-xs font-black uppercase tracking-widest text-primary mb-3">Required Secrets</p>
+            <p className="text-xs font-black uppercase tracking-widest text-primary mb-3">
+              Required Secrets
+            </p>
             {REQUIRED_SECRETS.map((key) => (
               <div
                 key={key}
@@ -47,9 +54,13 @@ function FirebaseSetupScreen() {
           </div>
 
           <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 space-y-2">
-            <p className="text-xs font-bold text-blue-800 uppercase tracking-widest">How to add secrets</p>
+            <p className="text-xs font-bold text-blue-800 uppercase tracking-widest">
+              How to add secrets
+            </p>
             <ol className="text-xs text-blue-700 space-y-1 list-decimal list-inside leading-relaxed">
-              <li>Click the <strong>Secrets</strong> padlock icon in the Replit sidebar</li>
+              <li>
+                Click the <strong>Secrets</strong> padlock icon in the Replit sidebar
+              </li>
               <li>Add each key above with its corresponding value from Firebase Console</li>
               <li>After adding all 6 secrets, restart the EcoPulse workflow</li>
             </ol>
@@ -71,6 +82,10 @@ function FirebaseSetupScreen() {
   );
 }
 
+/**
+ * Top-level provider that gates the app behind Firebase initialisation.
+ * Renders a setup screen when Firebase credentials are missing.
+ */
 export const FirebaseClientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (!isFirebaseConfigured) {
     return <FirebaseSetupScreen />;

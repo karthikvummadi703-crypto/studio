@@ -52,12 +52,18 @@ function PageTitle() {
 
 function PageLoader() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh]" role="status" aria-live="polite">
+    <div
+      className="flex flex-col items-center justify-center min-h-[60vh]"
+      role="status"
+      aria-live="polite"
+    >
       <div className="flex flex-col items-center gap-4 p-8 bg-white rounded-3xl shadow-lg border border-zinc-100">
         <div className="p-3 bg-primary/10 rounded-2xl">
           <Leaf className="h-10 w-10 text-primary" aria-hidden="true" />
         </div>
-        <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Initialising Node...</p>
+        <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
+          Initialising Node...
+        </p>
         <Spinner className="h-5 w-5 text-primary" label="Initializing environment node..." />
       </div>
     </div>
@@ -77,18 +83,42 @@ function Router() {
       <Suspense fallback={<PageLoader />}>
         <Switch>
           <Route path="/" component={RootRedirect} />
-          <Route path="/login"><LoginPage /></Route>
-          <Route path="/register"><RegisterPage /></Route>
-          <Route path="/forgot-password"><ForgotPasswordPage /></Route>
-          <Route path="/dashboard"><DashboardPage /></Route>
-          <Route path="/ai-advisor"><AIAdvisorPage /></Route>
-          <Route path="/calculator"><CalculatorPage /></Route>
-          <Route path="/insights"><InsightsPage /></Route>
-          <Route path="/knowledge-hub"><KnowledgeHubPage /></Route>
-          <Route path="/recommendations"><RecommendationsPage /></Route>
-          <Route path="/progress"><ProgressPage /></Route>
-          <Route path="/profile"><ProfilePage /></Route>
-          <Route path="/settings"><SettingsPage /></Route>
+          <Route path="/login">
+            <LoginPage />
+          </Route>
+          <Route path="/register">
+            <RegisterPage />
+          </Route>
+          <Route path="/forgot-password">
+            <ForgotPasswordPage />
+          </Route>
+          <Route path="/dashboard">
+            <DashboardPage />
+          </Route>
+          <Route path="/ai-advisor">
+            <AIAdvisorPage />
+          </Route>
+          <Route path="/calculator">
+            <CalculatorPage />
+          </Route>
+          <Route path="/insights">
+            <InsightsPage />
+          </Route>
+          <Route path="/knowledge-hub">
+            <KnowledgeHubPage />
+          </Route>
+          <Route path="/recommendations">
+            <RecommendationsPage />
+          </Route>
+          <Route path="/progress">
+            <ProgressPage />
+          </Route>
+          <Route path="/profile">
+            <ProfilePage />
+          </Route>
+          <Route path="/settings">
+            <SettingsPage />
+          </Route>
           <Route component={NotFound} />
         </Switch>
       </Suspense>
@@ -96,6 +126,7 @@ function Router() {
   );
 }
 
+/** Root React application component. Composes all top-level providers and the router. */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>

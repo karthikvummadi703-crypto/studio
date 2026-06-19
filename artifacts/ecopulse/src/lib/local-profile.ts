@@ -14,7 +14,7 @@ export interface LocalProfileData {
 
 const key = (uid: string) => `ecopulse_profile_${uid}`;
 
-const DEFAULT_PROFILE: Omit<LocalProfileData, 'updatedAt'> = {
+const DEFAULT_PROFILE: Omit<LocalProfileData, "updatedAt"> = {
   greenPoints: 100,
   sustainabilityScore: 75,
 };
@@ -32,12 +32,16 @@ export function initLocalProfile(uid: string): LocalProfileData {
   const existing = getLocalProfile(uid);
   if (existing) return existing;
   const initial: LocalProfileData = { ...DEFAULT_PROFILE, updatedAt: Date.now() };
-  try { localStorage.setItem(key(uid), JSON.stringify(initial)); } catch {}
+  try {
+    localStorage.setItem(key(uid), JSON.stringify(initial));
+  } catch {}
   return initial;
 }
 
 export function setLocalProfile(uid: string, data: LocalProfileData): void {
-  try { localStorage.setItem(key(uid), JSON.stringify(data)); } catch {}
+  try {
+    localStorage.setItem(key(uid), JSON.stringify(data));
+  } catch {}
 }
 
 export function incrementLocalProfile(
@@ -47,18 +51,27 @@ export function incrementLocalProfile(
   const current = getLocalProfile(uid) ?? { ...DEFAULT_PROFILE, updatedAt: Date.now() };
   const updated: LocalProfileData = {
     greenPoints: current.greenPoints + (delta.greenPoints ?? 0),
-    sustainabilityScore: Math.min(SCORE_CAP, current.sustainabilityScore + (delta.sustainabilityScore ?? 0)),
+    sustainabilityScore: Math.min(
+      SCORE_CAP,
+      current.sustainabilityScore + (delta.sustainabilityScore ?? 0)
+    ),
     updatedAt: Date.now(),
   };
   setLocalProfile(uid, updated);
   return updated;
 }
 
-export function mergeFirestoreProfile(uid: string, firestoreData: { greenPoints?: number; sustainabilityScore?: number }): void {
+export function mergeFirestoreProfile(
+  uid: string,
+  firestoreData: { greenPoints?: number; sustainabilityScore?: number }
+): void {
   const local = getLocalProfile(uid);
   const merged: LocalProfileData = {
     greenPoints: Math.max(local?.greenPoints ?? 0, firestoreData.greenPoints ?? 0),
-    sustainabilityScore: Math.min(SCORE_CAP, Math.max(local?.sustainabilityScore ?? 0, firestoreData.sustainabilityScore ?? 0)),
+    sustainabilityScore: Math.min(
+      SCORE_CAP,
+      Math.max(local?.sustainabilityScore ?? 0, firestoreData.sustainabilityScore ?? 0)
+    ),
     updatedAt: Date.now(),
   };
   setLocalProfile(uid, merged);

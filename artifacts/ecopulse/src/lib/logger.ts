@@ -12,26 +12,25 @@
  *   logger.error('[ChatRoute] Stream failed', error);
  */
 
-type LogLevel = 'log' | 'info' | 'warn' | 'error';
+type LogLevel = "log" | "info" | "warn" | "error";
 
 const env = process.env.NODE_ENV;
-const isTest = env === 'test';
-const isProd = env === 'production';
+const isTest = env === "test";
+const isProd = env === "production";
 
 function emit(level: LogLevel, prefix: string, args: unknown[]): void {
   if (isTest) return;
-  if (isProd && (level === 'log' || level === 'info')) return;
-  // eslint-disable-next-line no-console
+  if (isProd && (level === "log" || level === "info")) return;
   console[level](prefix, ...args);
 }
 
 export const logger = {
   /** Debug messages. Suppressed in production and test. */
-  log:   (...args: unknown[]): void => emit('log',   '[EcoPulse]',       args),
+  log: (...args: unknown[]): void => emit("log", "[EcoPulse]", args),
   /** Informational messages. Suppressed in production and test. */
-  info:  (...args: unknown[]): void => emit('info',  '[EcoPulse]',       args),
+  info: (...args: unknown[]): void => emit("info", "[EcoPulse]", args),
   /** Warnings. Suppressed in test only. */
-  warn:  (...args: unknown[]): void => emit('warn',  '[EcoPulse Warn]',  args),
+  warn: (...args: unknown[]): void => emit("warn", "[EcoPulse Warn]", args),
   /** Errors. Suppressed in test only. */
-  error: (...args: unknown[]): void => emit('error', '[EcoPulse Error]', args),
+  error: (...args: unknown[]): void => emit("error", "[EcoPulse Error]", args),
 };

@@ -24,19 +24,24 @@ declare global {
             cancel_on_tap_outside?: boolean;
             itp_support?: boolean;
           }): void;
-          renderButton(el: HTMLElement, opts: {
-            theme?: 'outline' | 'filled_blue' | 'filled_black';
-            size?: 'large' | 'medium' | 'small';
-            shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-            text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-            width?: number;
-            logo_alignment?: 'left' | 'center';
-          }): void;
-          prompt(fn?: (n: {
-            isNotDisplayed(): boolean;
-            isSkippedMoment(): boolean;
-            getNotDisplayedReason(): string;
-          }) => void): void;
+          renderButton(
+            el: HTMLElement,
+            opts: {
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              shape?: "rectangular" | "pill" | "circle" | "square";
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+              width?: number;
+              logo_alignment?: "left" | "center";
+            }
+          ): void;
+          prompt(
+            fn?: (n: {
+              isNotDisplayed(): boolean;
+              isSkippedMoment(): boolean;
+              getNotDisplayedReason(): string;
+            }) => void
+          ): void;
           cancel(): void;
         };
       };
@@ -59,10 +64,10 @@ export async function fetchGoogleClientId(_authDomain: string): Promise<string |
   try {
     // Resolve the API base: in Vite dev the proxy forwards /api → api-server;
     // in production the same path prefix works via the platform router.
-    const base = import.meta.env.BASE_URL?.replace(/\/$/, '') ?? '';
-    const res = await fetch(`${base}/api/config/google`, { cache: 'default' });
+    const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+    const res = await fetch(`${base}/api/config/google`, { cache: "default" });
     if (!res.ok) return null;
-    const data: { clientId?: string } = await res.json() as { clientId?: string };
+    const data: { clientId?: string } = (await res.json()) as { clientId?: string };
     _cachedClientId = data.clientId ?? null;
     return _cachedClientId;
   } catch {
@@ -79,12 +84,12 @@ export function loadGsiScript(): Promise<void> {
   if (_scriptPromise) return _scriptPromise;
 
   _scriptPromise = new Promise<void>((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
+    const s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
     s.async = true;
     s.defer = true;
     s.onload = () => resolve();
-    s.onerror = () => reject(new Error('Failed to load Google Sign-In script'));
+    s.onerror = () => reject(new Error("Failed to load Google Sign-In script"));
     document.head.appendChild(s);
   });
 
@@ -100,13 +105,10 @@ export function loadGsiScript(): Promise<void> {
  *
  * Uses `signInWithCredential` downstream (no Firebase domain check).
  */
-export function renderGoogleButton(
-  container: HTMLElement,
-  clientId: string,
-): Promise<string> {
+export function renderGoogleButton(container: HTMLElement, clientId: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     if (!window.google?.accounts?.id) {
-      reject(new Error('GSI not loaded'));
+      reject(new Error("GSI not loaded"));
       return;
     }
 
@@ -116,7 +118,7 @@ export function renderGoogleButton(
         if (response.credential) {
           resolve(response.credential);
         } else {
-          reject(new Error('google/no-credential'));
+          reject(new Error("google/no-credential"));
         }
       },
       auto_select: false,
@@ -125,12 +127,12 @@ export function renderGoogleButton(
     });
 
     window.google.accounts.id.renderButton(container, {
-      theme: 'outline',
-      size: 'large',
-      shape: 'pill',
-      text: 'signin_with',
+      theme: "outline",
+      size: "large",
+      shape: "pill",
+      text: "signin_with",
       width: container.offsetWidth || 200,
-      logo_alignment: 'center',
+      logo_alignment: "center",
     });
   });
 }

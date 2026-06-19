@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useMemo, useState, useEffect } from 'react';
-import { Firestore, onSnapshot } from 'firebase/firestore';
-import { useFirebase } from '@/firebase';
-import type { UserProfile, AIConversation } from '@/types';
-import { buildUserConversationsQuery } from '@/lib/firestore-queries';
+import { useMemo, useState, useEffect } from "react";
+import { Firestore, onSnapshot } from "firebase/firestore";
+import { useFirebase } from "@/firebase";
+import type { UserProfile, AIConversation } from "@/types";
+import { buildUserConversationsQuery } from "@/lib/firestore-queries";
 
 interface AdvisorData {
   profile: UserProfile | null;
@@ -41,14 +41,12 @@ export function useAdvisorData(userId: string | undefined, db: Firestore | undef
     const unsubscribe = onSnapshot(
       historyQuery,
       (snap) => {
-        const chatsData = snap.docs.map(
-          (doc) => ({ ...doc.data(), id: doc.id } as AIConversation)
-        );
+        const chatsData = snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }) as AIConversation);
         setRawChats(chatsData);
         setIsChatsLoading(false);
       },
       (error) => {
-        console.error('[useAdvisorData] Snapshot error:', error);
+        console.error("[useAdvisorData] Snapshot error:", error);
         setIsChatsLoading(false);
       }
     );

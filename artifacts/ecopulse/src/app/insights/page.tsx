@@ -1,17 +1,16 @@
+import { useEffect, useState, useCallback, Suspense, lazy } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui";
+import { Sparkles, Zap, Car, Utensils, ShoppingBag, Send } from "lucide-react";
+import { useUser, useFirestore } from "@/firebase";
+import { getDocs } from "firebase/firestore";
+import { GenerateReductionPlanOutput } from "@/ai/flows/types";
+import { Link } from "wouter";
+import { buildUserCalculatorRecordsQuery } from "@/lib/firestore-queries";
+import { getErrorMessage } from "@/lib/handle-error";
 
-import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui';
-import { Sparkles, Zap, Car, Utensils, ShoppingBag, Send } from 'lucide-react';
-import { useUser, useFirestore } from '@/firebase';
-import { getDocs } from 'firebase/firestore';
-import { GenerateReductionPlanOutput } from '@/ai/flows/types';
-import { Link } from 'wouter';
-import { buildUserCalculatorRecordsQuery } from '@/lib/firestore-queries';
-import { getErrorMessage } from '@/lib/handle-error';
-
-const InsightCategoryCard = lazy(() => import('./insight-card'));
+const InsightCategoryCard = lazy(() => import("./insight-card"));
 
 interface LatestRecord {
   co2?: number;
@@ -45,11 +44,11 @@ export default function InsightsPage() {
     setLoading(true);
     try {
       const idToken = await user.getIdToken();
-      const response = await fetch('/api/ai/insights', {
-        method: 'POST',
+      const response = await fetch("/api/ai/insights", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
         },
         body: JSON.stringify({
           totalEmissions: latestRecord.co2 || 0,
@@ -57,20 +56,21 @@ export default function InsightsPage() {
             transportation: latestRecord.co2 || 0,
             homeEnergy: 0,
             food: 0,
-            lifestyle: 0
-          }
-        })
+            lifestyle: 0,
+          },
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to fetch insights');
-      
+      if (!response.ok) throw new Error("Failed to fetch insights");
+
       const result = await response.json();
       setInsight(result);
     } catch (error: unknown) {
-      console.error('[Insights] Generation failed:', getErrorMessage(error));
+      console.error("[Insights] Generation failed:", getErrorMessage(error));
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestRecord]);
 
   return (
@@ -78,11 +78,24 @@ export default function InsightsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-headline font-bold">AI Strategic Insights</h1>
-          <p className="text-zinc-600">Deep analysis and actionable reduction strategies powered by Gemini.</p>
+          <p className="text-zinc-600">
+            Deep analysis and actionable reduction strategies powered by Gemini.
+          </p>
         </div>
         {!insight && latestRecord && (
-          <Button onClick={handleGenerate} disabled={loading} size="lg" className="bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-            {loading ? <Spinner className="mr-2 h-4 w-4" label="Generating insights..." /> : <><Sparkles className="mr-2 h-5 w-5" /> Generate My Strategy</>}
+          <Button
+            onClick={handleGenerate}
+            disabled={loading}
+            size="lg"
+            className="bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+          >
+            {loading ? (
+              <Spinner className="mr-2 h-4 w-4" label="Generating insights..." />
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-5 w-5" /> Generate My Strategy
+              </>
+            )}
           </Button>
         )}
       </div>
@@ -90,20 +103,30 @@ export default function InsightsPage() {
       {!latestRecord && !loading && (
         <Card className="bg-white border-dashed border-2 border-zinc-200">
           <CardContent className="flex flex-col items-center justify-center py-20 text-center space-y-4">
-             <div className="p-4 bg-zinc-50 rounded-full"><Sparkles className="h-10 w-10 text-zinc-400" /></div>
-             <p className="text-xl font-headline font-bold">No Data Found</p>
-             <p className="text-zinc-500 max-w-sm"> We need at least one carbon calculation to generate personalized insights.</p>
-             <Button asChild variant="outline" className="rounded-xl">
-               <Link href="/calculator">Calculate Footprint</Link>
-             </Button>
+            <div className="p-4 bg-zinc-50 rounded-full">
+              <Sparkles className="h-10 w-10 text-zinc-400" />
+            </div>
+            <p className="text-xl font-headline font-bold">No Data Found</p>
+            <p className="text-zinc-500 max-w-sm">
+              {" "}
+              We need at least one carbon calculation to generate personalized insights.
+            </p>
+            <Button asChild variant="outline" className="rounded-xl">
+              <Link href="/calculator">Calculate Footprint</Link>
+            </Button>
           </CardContent>
         </Card>
       )}
 
       {loading && (
         <div className="flex flex-col items-center justify-center py-20 space-y-4">
-          <Spinner className="h-12 w-12 text-primary" label="Analyzing your footprint with Gemini AI..." />
-          <p className="font-headline text-lg animate-pulse text-zinc-700">Analyzing your footprint with Gemini AI...</p>
+          <Spinner
+            className="h-12 w-12 text-primary"
+            label="Analyzing your footprint with Gemini AI..."
+          />
+          <p className="font-headline text-lg animate-pulse text-zinc-700">
+            Analyzing your footprint with Gemini AI...
+          </p>
         </div>
       )}
 
@@ -114,7 +137,9 @@ export default function InsightsPage() {
               <Sparkles className="h-10 w-10 text-primary/10" />
             </div>
             <CardHeader>
-              <CardTitle className="font-headline text-2xl text-foreground">Personalized Analysis</CardTitle>
+              <CardTitle className="font-headline text-2xl text-foreground">
+                Personalized Analysis
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="prose prose-zinc max-w-none text-zinc-600">
@@ -148,10 +173,26 @@ export default function InsightsPage() {
           </Card>
 
           <Suspense fallback={<div className="h-48 bg-zinc-50 animate-pulse rounded-2xl" />}>
-            <InsightCategoryCard title="Transport Recommendations" icon={Car} items={insight.transportationRecommendations} />
-            <InsightCategoryCard title="Home Energy" icon={Zap} items={insight.homeEnergyRecommendations} />
-            <InsightCategoryCard title="Food & Diet" icon={Utensils} items={insight.foodRecommendations} />
-            <InsightCategoryCard title="Lifestyle" icon={ShoppingBag} items={insight.lifestyleRecommendations} />
+            <InsightCategoryCard
+              title="Transport Recommendations"
+              icon={Car}
+              items={insight.transportationRecommendations}
+            />
+            <InsightCategoryCard
+              title="Home Energy"
+              icon={Zap}
+              items={insight.homeEnergyRecommendations}
+            />
+            <InsightCategoryCard
+              title="Food & Diet"
+              icon={Utensils}
+              items={insight.foodRecommendations}
+            />
+            <InsightCategoryCard
+              title="Lifestyle"
+              icon={ShoppingBag}
+              items={insight.lifestyleRecommendations}
+            />
           </Suspense>
         </div>
       )}

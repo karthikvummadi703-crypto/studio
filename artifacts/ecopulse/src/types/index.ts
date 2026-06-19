@@ -1,21 +1,21 @@
 /**
  * @fileOverview Centralised TypeScript interfaces for EcoPulse AI.
  */
-import { Timestamp, FieldValue } from 'firebase/firestore';
+import { Timestamp, FieldValue } from "firebase/firestore";
 
 export interface UserProfile {
   fullName: string;
   email: string;
   greenPoints: number;
   sustainabilityScore: number;
-  level: 'Seedling' | 'Eco Warrior' | 'Climate Champion' | 'Planet Guardian';
+  level: "Seedling" | "Eco Warrior" | "Climate Champion" | "Planet Guardian";
   createdAt: Timestamp | FieldValue;
   completedChallenges: string[];
   id?: string;
 }
 
 export interface ChatMessage {
-  role: 'user' | 'ai';
+  role: "user" | "ai";
   text: string;
   timestamp: string;
 }
@@ -44,7 +44,7 @@ export interface CarbonRecord {
 export interface Activity {
   id?: string;
   userId: string;
-  type: 'milestone' | 'initialization' | 'challenge_complete' | 'carbon_log';
+  type: "milestone" | "initialization" | "challenge_complete" | "carbon_log";
   description: string;
   pointsEarned: number;
   timestamp: Timestamp | FieldValue;

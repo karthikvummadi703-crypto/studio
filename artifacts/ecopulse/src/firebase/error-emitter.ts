@@ -11,16 +11,21 @@ class BrowserEventEmitter {
 
   off(event: string, listener: Listener): this {
     const list = this.listeners.get(event);
-    if (list) this.listeners.set(event, list.filter(l => l !== listener));
+    if (list)
+      this.listeners.set(
+        event,
+        list.filter((l) => l !== listener)
+      );
     return this;
   }
 
   emit(event: string, ...args: unknown[]): boolean {
     const list = this.listeners.get(event);
     if (!list || list.length === 0) return false;
-    list.forEach(l => l(...args));
+    list.forEach((l) => l(...args));
     return true;
   }
 }
 
+/** Singleton event emitter for broadcasting Firebase/Firestore errors to the UI layer. */
 export const errorEmitter = new BrowserEventEmitter();

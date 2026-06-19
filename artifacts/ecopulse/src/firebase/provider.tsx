@@ -1,18 +1,25 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, ReactNode, useState, useEffect, useCallback } from 'react';
-import { FirebaseApp } from 'firebase/app';
-import { Firestore, doc, onSnapshot } from 'firebase/firestore';
-import { Auth, onAuthStateChanged } from 'firebase/auth';
-import { UserProfile } from '@/types';
-import { COLLECTIONS } from '@/lib/constants';
+import React, {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import { FirebaseApp } from "firebase/app";
+import { Firestore, doc, onSnapshot } from "firebase/firestore";
+import { Auth, onAuthStateChanged } from "firebase/auth";
+import { UserProfile } from "@/types";
+import { COLLECTIONS } from "@/lib/constants";
 import {
   getLocalProfile,
   initLocalProfile,
   setLocalProfile,
   mergeFirestoreProfile,
   LocalProfileData,
-} from '@/lib/local-profile';
+} from "@/lib/local-profile";
 
 interface FirebaseContextType {
   app: FirebaseApp;
@@ -26,15 +33,12 @@ interface FirebaseContextType {
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
 
-function buildProfileFromLocal(
-  local: LocalProfileData,
-  base: Partial<UserProfile>
-): UserProfile {
+function buildProfileFromLocal(local: LocalProfileData, base: Partial<UserProfile>): UserProfile {
   return {
-    fullName: base.fullName ?? '',
-    email: base.email ?? '',
-    level: base.level ?? 'Seedling',
-    createdAt: base.createdAt ?? (new Date() as unknown as import('firebase/firestore').Timestamp),
+    fullName: base.fullName ?? "",
+    email: base.email ?? "",
+    level: base.level ?? "Seedling",
+    createdAt: base.createdAt ?? (new Date() as unknown as import("firebase/firestore").Timestamp),
     completedChallenges: base.completedChallenges ?? [],
     id: base.id,
     greenPoints: local.greenPoints,
@@ -109,11 +113,11 @@ export const FirebaseProvider: React.FC<{
             setProfile(merged_profile);
           } else {
             // Profile document doesn't exist yet — show localStorage values.
-            setProfileBase({ email: user.email ?? '', fullName: user.displayName ?? '' });
+            setProfileBase({ email: user.email ?? "", fullName: user.displayName ?? "" });
             setProfile(
               buildProfileFromLocal(local, {
-                email: user.email ?? '',
-                fullName: user.displayName ?? '',
+                email: user.email ?? "",
+                fullName: user.displayName ?? "",
               })
             );
           }
@@ -121,17 +125,17 @@ export const FirebaseProvider: React.FC<{
         },
         (error) => {
           // Firestore rules not deployed yet — fall back to localStorage silently.
-          if (error.code === 'permission-denied') {
+          if (error.code === "permission-denied") {
             const fallback = getLocalProfile(user.uid) ?? initLocalProfile(user.uid);
-            setProfileBase({ email: user.email ?? '', fullName: user.displayName ?? '' });
+            setProfileBase({ email: user.email ?? "", fullName: user.displayName ?? "" });
             setProfile(
               buildProfileFromLocal(fallback, {
-                email: user.email ?? '',
-                fullName: user.displayName ?? '',
+                email: user.email ?? "",
+                fullName: user.displayName ?? "",
               })
             );
           } else {
-            console.error('Profile subscription error:', error);
+            console.error("Profile subscription error:", error);
           }
           setIsProfileLoading(false);
         }
@@ -144,29 +148,35 @@ export const FirebaseProvider: React.FC<{
   }, [auth, firestore]);
 
   return (
-    <FirebaseContext.Provider value={{
-      app,
-      firestore,
-      auth,
-      profile,
-      isProfileLoading,
-      updateProfileScores,
-    }}>
+    <FirebaseContext.Provider
+      value={{
+        app,
+        firestore,
+        auth,
+        profile,
+        isProfileLoading,
+        updateProfileScores,
+      }}
+    >
       {children}
     </FirebaseContext.Provider>
   );
 };
 
+/** Returns the Firebase context value. Must be called inside a FirebaseProvider. */
 export const useFirebase = () => {
   const context = useContext(FirebaseContext);
   if (!context) {
-    throw new Error('useFirebase must be used within a FirebaseProvider');
+    throw new Error("useFirebase must be used within a FirebaseProvider");
   }
   return context;
 };
 
+/** Returns the Firebase App instance from context. */
 export const useFirebaseApp = () => useFirebase().app;
+/** Returns the Firestore instance from context. */
 export const useFirestore = () => useFirebase().firestore;
+/** Returns the Firebase Auth instance from context. */
 export const useAuth = () => useFirebase().auth;
 
 /**

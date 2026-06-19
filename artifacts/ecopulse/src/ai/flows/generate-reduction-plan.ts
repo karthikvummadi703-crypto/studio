@@ -1,92 +1,76 @@
-'use server';
+"use server";
 /**
  * @fileOverview A Genkit flow for generating a personalized carbon reduction plan.
  */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { ai } from "@/ai/genkit";
+import { z } from "genkit";
 
 const RecommendationSchema = z.object({
-  action: z.string().describe('The specific action to take.'),
+  action: z.string().describe("The specific action to take."),
   impactLevel: z
-    .enum(['Low', 'Medium', 'High'])
-    .describe('The estimated impact level of this action on carbon reduction.'),
+    .enum(["Low", "Medium", "High"])
+    .describe("The estimated impact level of this action on carbon reduction."),
   difficultyLevel: z
-    .enum(['Easy', 'Moderate', 'Hard'])
-    .describe('The estimated difficulty level to implement this action.'),
+    .enum(["Easy", "Moderate", "Hard"])
+    .describe("The estimated difficulty level to implement this action."),
   estimatedCarbonSavings: z
     .string()
-    .describe(
-      'Estimated carbon savings per year (e.g., "50 kgCO2e/year" or "10% reduction").'
-    ),
+    .describe('Estimated carbon savings per year (e.g., "50 kgCO2e/year" or "10% reduction").'),
 });
 
 export const GenerateReductionPlanInputSchema = z.object({
   totalEmissions: z
     .number()
     .nonnegative()
-    .describe('The user\'s total estimated carbon emissions in kgCO2e.'),
+    .describe("The user's total estimated carbon emissions in kgCO2e."),
   emissionsBreakdown: z
     .object({
       transportation: z
         .number()
         .nonnegative()
-        .describe('Carbon emissions from transportation in kgCO2e.'),
-      homeEnergy: z
-        .number()
-        .nonnegative()
-        .describe('Carbon emissions from home energy in kgCO2e.'),
-      food: z
-        .number()
-        .nonnegative()
-        .describe('Carbon emissions from food consumption in kgCO2e.'),
+        .describe("Carbon emissions from transportation in kgCO2e."),
+      homeEnergy: z.number().nonnegative().describe("Carbon emissions from home energy in kgCO2e."),
+      food: z.number().nonnegative().describe("Carbon emissions from food consumption in kgCO2e."),
       lifestyle: z
         .number()
         .nonnegative()
-        .describe('Carbon emissions from lifestyle choices in kgCO2e.'),
+        .describe("Carbon emissions from lifestyle choices in kgCO2e."),
     })
-    .describe('Breakdown of carbon emissions by category.'),
+    .describe("Breakdown of carbon emissions by category."),
 });
 
-export type GenerateReductionPlanInput = z.infer<
-  typeof GenerateReductionPlanInputSchema
->;
+export type GenerateReductionPlanInput = z.infer<typeof GenerateReductionPlanInputSchema>;
 
 const GenerateReductionPlanOutputSchema = z.object({
   personalizedAnalysis: z
     .string()
-    .describe(
-      'A detailed explanation of the user\'s current footprint and main emission sources.'
-    ),
-  weeklyActionPlan: z
-    .string()
-    .describe('A detailed, actionable weekly plan for carbon reduction.'),
+    .describe("A detailed explanation of the user's current footprint and main emission sources."),
+  weeklyActionPlan: z.string().describe("A detailed, actionable weekly plan for carbon reduction."),
   monthlyImprovementStrategy: z
     .string()
-    .describe('A long-term strategy for sustained carbon footprint reduction.'),
+    .describe("A long-term strategy for sustained carbon footprint reduction."),
   transportationRecommendations: z
     .array(RecommendationSchema)
-    .describe('Specific recommendations for reducing transportation emissions.'),
+    .describe("Specific recommendations for reducing transportation emissions."),
   homeEnergyRecommendations: z
     .array(RecommendationSchema)
-    .describe('Specific recommendations for reducing home energy consumption.'),
+    .describe("Specific recommendations for reducing home energy consumption."),
   foodRecommendations: z
     .array(RecommendationSchema)
-    .describe('Specific recommendations for sustainable food choices.'),
+    .describe("Specific recommendations for sustainable food choices."),
   lifestyleRecommendations: z
     .array(RecommendationSchema)
-    .describe('Specific recommendations for reducing lifestyle-related emissions.'),
+    .describe("Specific recommendations for reducing lifestyle-related emissions."),
 });
 
-export type GenerateReductionPlanOutput = z.infer<
-  typeof GenerateReductionPlanOutputSchema
->;
+export type GenerateReductionPlanOutput = z.infer<typeof GenerateReductionPlanOutputSchema>;
 
 /**
  * Prompt for carbon reduction plan generation.
  */
 export const reductionPlanPrompt = ai.definePrompt({
-  name: 'reductionPlanPrompt',
+  name: "reductionPlanPrompt",
   input: { schema: GenerateReductionPlanInputSchema },
   output: { schema: GenerateReductionPlanOutputSchema },
   prompt: `You are an expert sustainability consultant tasked with generating a personalized carbon reduction plan.
@@ -106,14 +90,14 @@ Prioritize recommendations that address the highest emission categories and are 
  */
 export const generateReductionPlanFlow = ai.defineFlow(
   {
-    name: 'generateReductionPlanFlow',
+    name: "generateReductionPlanFlow",
     inputSchema: GenerateReductionPlanInputSchema,
     outputSchema: GenerateReductionPlanOutputSchema,
   },
   async (input) => {
     const { output } = await reductionPlanPrompt(input);
     if (!output) {
-      throw new Error('Reduction plan generation failed: Empty output');
+      throw new Error("Reduction plan generation failed: Empty output");
     }
     return output;
   }

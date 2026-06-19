@@ -1,0 +1,2 @@
+- [EcoPulse tsconfig setup](ecopulse-tsconfig.md) — test files excluded from main tsc; vitest/globals type added; strict:true enabled with strictFunctionTypes:false override.
+- [EcoPulse ESLint setup](ecopulse-eslint.md) — flat config eslint.config.mjs using @typescript-eslint + react-hooks; ESLint binary lives at root node_modules, not ecopulse local.

@@ -1,20 +1,23 @@
-
-import { useState, useCallback, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth, useUser } from '@/firebase';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useCallback, useEffect } from "react";
+import { useLocation } from "wouter";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth, useUser } from "@/firebase";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
-  Card, CardContent, CardHeader,
-  CardTitle, CardDescription, CardFooter
-} from '@/components/ui/card';
-import { Leaf, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
-import { Link } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
-import { APP_METADATA } from '@/lib/constants';
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Leaf, Mail, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { APP_METADATA } from "@/lib/constants";
 
 /**
  * Forgot Password page — sends a Firebase password reset email.
@@ -24,56 +27,76 @@ export default function ForgotPasswordPage() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   // Redirect authenticated users away from this page
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [user, authLoading, navigate]);
 
-  const handleReset = useCallback(async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault();
-    const trimmedEmail = email.trim().toLowerCase();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const handleReset = useCallback(
+    async (e: React.FormEvent): Promise<void> => {
+      e.preventDefault();
+      const trimmedEmail = email.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailRegex.test(trimmedEmail)) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Email',
-        description: 'Please enter a valid email address.',
-      });
-      return;
-    }
-
-    setLoading(true);
-    try {
-      if (!auth) throw new Error('auth/not-initialized');
-      await sendPasswordResetEmail(auth, trimmedEmail);
-      setSent(true);
-    } catch (error: unknown) {
-      const code = (error as { code?: string })?.code ?? '';
-      if (code === 'auth/user-not-found' || code === '') {
-        // Silently succeed for user-not-found to prevent email enumeration,
-        // and for the no-code case (success path doesn't always have a code).
-        setSent(true);
-      } else if (code === 'auth/invalid-email') {
-        toast({ variant: 'destructive', title: 'Invalid Email', description: 'Please double-check the email address.' });
-      } else if (code === 'auth/too-many-requests') {
-        toast({ variant: 'destructive', title: 'Too Many Attempts', description: 'Please wait a few minutes before trying again.' });
-      } else if (code === 'auth/not-initialized') {
-        toast({ variant: 'destructive', title: 'Service Unavailable', description: 'Firebase is not configured. Contact support.' });
-      } else {
-        // Network error or other — show a real message so the user knows to retry
-        toast({ variant: 'destructive', title: 'Send Failed', description: 'Could not send reset email. Check your internet connection and try again.' });
+      if (!emailRegex.test(trimmedEmail)) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Email",
+          description: "Please enter a valid email address.",
+        });
+        return;
       }
-    } finally {
-      setLoading(false);
-    }
-  }, [email, toast]);
+
+      setLoading(true);
+      try {
+        if (!auth) throw new Error("auth/not-initialized");
+        await sendPasswordResetEmail(auth, trimmedEmail);
+        setSent(true);
+      } catch (error: unknown) {
+        const code = (error as { code?: string })?.code ?? "";
+        if (code === "auth/user-not-found" || code === "") {
+          // Silently succeed for user-not-found to prevent email enumeration,
+          // and for the no-code case (success path doesn't always have a code).
+          setSent(true);
+        } else if (code === "auth/invalid-email") {
+          toast({
+            variant: "destructive",
+            title: "Invalid Email",
+            description: "Please double-check the email address.",
+          });
+        } else if (code === "auth/too-many-requests") {
+          toast({
+            variant: "destructive",
+            title: "Too Many Attempts",
+            description: "Please wait a few minutes before trying again.",
+          });
+        } else if (code === "auth/not-initialized") {
+          toast({
+            variant: "destructive",
+            title: "Service Unavailable",
+            description: "Firebase is not configured. Contact support.",
+          });
+        } else {
+          // Network error or other — show a real message so the user knows to retry
+          toast({
+            variant: "destructive",
+            title: "Send Failed",
+            description:
+              "Could not send reset email. Check your internet connection and try again.",
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [email, toast]
+  );
 
   if (authLoading) {
     return (
@@ -117,12 +140,13 @@ export default function ForgotPasswordPage() {
               <div className="space-y-2">
                 <p className="font-headline font-bold text-lg text-foreground">Check your inbox</p>
                 <p className="text-sm text-zinc-600 max-w-xs mx-auto">
-                  If an account exists for <span className="font-bold text-foreground">{email}</span>,
-                  a password reset link has been sent. Check your spam folder if you don't see it.
+                  If an account exists for{" "}
+                  <span className="font-bold text-foreground">{email}</span>, a password reset link
+                  has been sent. Check your spam folder if you don't see it.
                 </p>
               </div>
               <Button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform focus-visible:ring-2 focus-visible:ring-primary"
               >
                 Back to Sign In
@@ -169,9 +193,11 @@ export default function ForgotPasswordPage() {
                   className="w-full h-12 bg-primary text-white font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform focus-visible:ring-2 focus-visible:ring-primary"
                   disabled={loading}
                 >
-                  {loading
-                    ? <Spinner className="h-5 w-5" label="Sending reset link..." />
-                    : 'Send Reset Link'}
+                  {loading ? (
+                    <Spinner className="h-5 w-5" label="Sending reset link..." />
+                  ) : (
+                    "Send Reset Link"
+                  )}
                 </Button>
               </form>
             </>

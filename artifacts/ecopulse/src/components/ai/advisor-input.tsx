@@ -1,6 +1,5 @@
-
-import { Send } from 'lucide-react';
-import { Button, Input, Spinner } from '@/components/ui';
+import { Send } from "lucide-react";
+import { Button, Input, Spinner } from "@/components/ui";
 
 interface AdvisorInputProps {
   input: string;
@@ -16,20 +15,20 @@ export function AdvisorInput({ input, setInput, handleSend, isLoading }: Advisor
   return (
     <div className="p-5 border-t border-zinc-100 bg-white flex flex-col gap-3">
       <div className="flex gap-3">
-        <Input 
-          placeholder="Ask Gemini..." 
+        <Input
+          placeholder="Ask Gemini..."
           aria-label="Message AI Advisor"
           aria-describedby="advisor-send-hint"
           className="bg-zinc-50 border-zinc-200 text-xs h-12 rounded-xl"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => e.key === "Enter" && handleSend()}
           disabled={isLoading}
         />
-        <Button 
-          size="icon" 
-          className="h-12 w-12 bg-primary shadow-lg hover:scale-105 transition-transform shrink-0" 
-          onClick={() => handleSend()} 
+        <Button
+          size="icon"
+          className="h-12 w-12 bg-primary shadow-lg hover:scale-105 transition-transform shrink-0"
+          onClick={() => handleSend()}
           disabled={isLoading || !input.trim()}
           aria-label="Send message"
         >

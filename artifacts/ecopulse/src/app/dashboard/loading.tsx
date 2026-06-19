@@ -1,11 +1,16 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * High-performance skeleton loader for the Dashboard Strategy Node.
  */
 export default function DashboardLoading() {
   return (
-    <div className="space-y-10 animate-pulse" role="status" aria-label="Loading dashboard telemetry" aria-busy="true">
+    <div
+      className="space-y-10 animate-pulse"
+      role="status"
+      aria-label="Loading dashboard telemetry"
+      aria-busy="true"
+    >
       <span className="sr-only">Synchronizing dashboard node, please wait...</span>
       <div className="flex justify-between items-end">
         <div className="space-y-2">

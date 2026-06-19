@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { FlaskConical, X, UserPlus } from 'lucide-react';
-import { Link, useLocation } from 'wouter';
-import { signOut } from 'firebase/auth';
-import { useAuth } from '@/firebase';
-import { IS_DEMO_KEY } from '@/lib/constants';
+import { FlaskConical, X, UserPlus } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { signOut } from "firebase/auth";
+import { useAuth } from "@/firebase";
+import { IS_DEMO_KEY } from "@/lib/constants";
 
 /**
  * Sticky banner shown at the top of every app page for demo users.
@@ -17,7 +17,7 @@ export function DemoBanner() {
   const handleExitDemo = async () => {
     sessionStorage.removeItem(IS_DEMO_KEY);
     if (auth) await signOut(auth);
-    navigate('/login');
+    navigate("/login");
   };
 
   return (

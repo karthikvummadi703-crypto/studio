@@ -1,7 +1,7 @@
 export interface Recommendation {
   action: string;
-  impactLevel: 'Low' | 'Medium' | 'High';
-  difficultyLevel: 'Easy' | 'Moderate' | 'Hard';
+  impactLevel: "Low" | "Medium" | "High";
+  difficultyLevel: "Easy" | "Moderate" | "Hard";
   estimatedCarbonSavings: string;
 }
 

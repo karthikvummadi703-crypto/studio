@@ -1,11 +1,16 @@
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * High-performance skeleton loader for the Impact Analytics node.
  */
 export default function ProgressLoading() {
   return (
-    <div className="space-y-8 animate-pulse" role="status" aria-label="Loading analytics content" aria-busy="true">
+    <div
+      className="space-y-8 animate-pulse"
+      role="status"
+      aria-label="Loading analytics content"
+      aria-busy="true"
+    >
       <span className="sr-only">Loading analytics telemetry, please wait...</span>
       <Skeleton className="h-10 w-64" />
       <Skeleton className="h-[400px] w-full rounded-[2rem]" />

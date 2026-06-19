@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Leaf, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { Leaf, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface State {
   hasError: boolean;
@@ -18,7 +18,7 @@ export class ErrorBoundary extends React.Component<
 > {
   constructor(props: { children: React.ReactNode; fallbackMessage?: string }) {
     super(props);
-    this.state = { hasError: false, message: '' };
+    this.state = { hasError: false, message: "" };
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -27,7 +27,7 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     // Log errors to a service in production if needed
-    console.error('[ErrorBoundary]', error, info);
+    console.error("[ErrorBoundary]", error, info);
   }
 
   render() {
@@ -38,13 +38,16 @@ export class ErrorBoundary extends React.Component<
             <Leaf className="h-10 w-10 text-red-400" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-headline font-bold text-foreground tracking-tight">Something went wrong</h2>
+            <h2 className="text-xl font-headline font-bold text-foreground tracking-tight">
+              Something went wrong
+            </h2>
             <p className="text-sm text-muted-foreground max-w-sm font-medium">
-              {this.props.fallbackMessage || 'An unexpected error occurred in this environmental node. Please try again.'}
+              {this.props.fallbackMessage ||
+                "An unexpected error occurred in this environmental node. Please try again."}
             </p>
           </div>
           <Button
-            onClick={() => this.setState({ hasError: false, message: '' })}
+            onClick={() => this.setState({ hasError: false, message: "" })}
             className="rounded-xl font-bold px-8 shadow-lg transition-transform hover:scale-105"
             variant="outline"
           >

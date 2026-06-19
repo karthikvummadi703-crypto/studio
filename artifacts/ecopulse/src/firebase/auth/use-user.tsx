@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../config';
-import { IS_DEMO_KEY } from '@/lib/constants';
+import { useState, useEffect } from "react";
+import { User, onAuthStateChanged } from "firebase/auth";
+import { auth } from "../config";
+import { IS_DEMO_KEY } from "@/lib/constants";
 
 /**
  * Production-ready useUser hook.
@@ -25,8 +25,7 @@ export const useUser = () => {
       if (firebaseUser && firebaseUser.isAnonymous) {
         // Anonymous users are only allowed if they explicitly entered demo mode
         const demoFlag =
-          typeof sessionStorage !== 'undefined' &&
-          sessionStorage.getItem(IS_DEMO_KEY) === 'true';
+          typeof sessionStorage !== "undefined" && sessionStorage.getItem(IS_DEMO_KEY) === "true";
         if (demoFlag) {
           setIsDemo(true);
           setUser(firebaseUser);

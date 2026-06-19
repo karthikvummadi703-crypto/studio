@@ -1,6 +1,6 @@
-import { Link } from 'wouter';
-import { Leaf, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Link } from "wouter";
+import { Leaf, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 /**
  * Custom 404 page matching EcoPulse design system.
@@ -12,7 +12,9 @@ export default function NotFound() {
         <Leaf className="h-12 w-12 text-primary" />
       </div>
       <div className="space-y-3">
-        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">404 — Node Not Found</p>
+        <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">
+          404 — Node Not Found
+        </p>
         <h1 className="text-4xl font-headline font-bold tracking-tight">This page doesn't exist</h1>
         <p className="text-muted-foreground text-sm max-w-sm mx-auto">
           The environmental node you're looking for has been decommissioned or never existed.
