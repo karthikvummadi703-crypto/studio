@@ -62,8 +62,15 @@ let _cachedClientId: string | null = null;
 export async function fetchGoogleClientId(_authDomain: string): Promise<string | null> {
   if (_cachedClientId) return _cachedClientId;
   try {
-    // Resolve the API base: in Vite dev the proxy forwards /api → api-server;
-    // in production the same path prefix works via the platform router.
+    // 1. Check build-time env var first (no API round-trip needed)
+    const buildTimeId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    if (buildTimeId) {
+      _cachedClientId = buildTimeId;
+      return _cachedClientId;
+    }
+
+    // 2. Fetch from API server (which checks GOOGLE_CLIENT_ID env var, then
+    //    falls back to Firebase Hosting init.json discovery)
     const base = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
     const res = await fetch(`${base}/api/config/google`, { cache: "default" });
     if (!res.ok) return null;
