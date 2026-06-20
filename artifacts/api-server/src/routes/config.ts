@@ -16,9 +16,7 @@ router.get("/config/google", async (_req, res) => {
 
     // 1. Prefer an explicitly configured env var (no Firebase Hosting required)
     const envClientId =
-      process.env["GOOGLE_CLIENT_ID"] ??
-      process.env["VITE_GOOGLE_CLIENT_ID"] ??
-      null;
+      process.env["GOOGLE_CLIENT_ID"] ?? process.env["VITE_GOOGLE_CLIENT_ID"] ?? null;
 
     if (envClientId) {
       _cachedClientId = envClientId;
@@ -29,9 +27,7 @@ router.get("/config/google", async (_req, res) => {
 
     // 2. Fallback: auto-discover from Firebase Hosting init.json
     const authDomain =
-      process.env["VITE_FIREBASE_AUTH_DOMAIN"] ??
-      process.env["FIREBASE_AUTH_DOMAIN"] ??
-      "";
+      process.env["VITE_FIREBASE_AUTH_DOMAIN"] ?? process.env["FIREBASE_AUTH_DOMAIN"] ?? "";
 
     if (!authDomain) {
       res.json({ clientId: null });

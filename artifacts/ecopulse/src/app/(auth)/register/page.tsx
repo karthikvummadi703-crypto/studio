@@ -20,8 +20,6 @@ import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { COLLECTIONS, IS_DEMO_KEY } from "@/lib/constants";
-import { errorEmitter } from "@/firebase/error-emitter";
-import { FirestorePermissionError } from "@/firebase/errors";
 import { cn } from "@/lib/utils";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { setSessionCookieAction } from "@/app/actions/session";

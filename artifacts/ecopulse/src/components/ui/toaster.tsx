@@ -8,6 +8,10 @@ import {
   ToastViewport,
 } from "@/components/ui/toast";
 
+/**
+ * Root toast notification renderer. Reads from the global toast queue and renders
+ * accessible Toast elements with correct ARIA live-region attributes.
+ */
 export function Toaster() {
   const { toasts } = useToast();
 

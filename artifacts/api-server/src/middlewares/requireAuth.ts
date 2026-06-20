@@ -14,9 +14,7 @@ function getAdminApp(): App {
   }
 
   const projectId =
-    process.env["VITE_FIREBASE_PROJECT_ID"] ??
-    process.env["FIREBASE_PROJECT_ID"] ??
-    "";
+    process.env["VITE_FIREBASE_PROJECT_ID"] ?? process.env["FIREBASE_PROJECT_ID"] ?? "";
 
   const clientEmail = process.env["FIREBASE_CLIENT_EMAIL"];
   const privateKey = process.env["FIREBASE_PRIVATE_KEY"]?.replace(/\\n/g, "\n");
@@ -38,11 +36,7 @@ function getAdminApp(): App {
  * Responds 401 when the token is missing or invalid.
  * Attaches `res.locals.uid` on success.
  */
-export async function requireAuth(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): Promise<void> {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader?.startsWith("Bearer ")) {

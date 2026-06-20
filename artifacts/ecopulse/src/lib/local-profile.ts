@@ -19,6 +19,11 @@ const DEFAULT_PROFILE: Omit<LocalProfileData, "updatedAt"> = {
   sustainabilityScore: 75,
 };
 
+/**
+ * Reads the cached profile for the given user from localStorage.
+ * @param uid - Firebase Auth UID.
+ * @returns The stored profile, or null if none exists.
+ */
 export function getLocalProfile(uid: string): LocalProfileData | null {
   try {
     const raw = localStorage.getItem(key(uid));
@@ -28,6 +33,11 @@ export function getLocalProfile(uid: string): LocalProfileData | null {
   }
 }
 
+/**
+ * Initialises a local profile with default values if one does not already exist.
+ * @param uid - Firebase Auth UID.
+ * @returns The existing or newly created profile.
+ */
 export function initLocalProfile(uid: string): LocalProfileData {
   const existing = getLocalProfile(uid);
   if (existing) return existing;
@@ -38,12 +48,24 @@ export function initLocalProfile(uid: string): LocalProfileData {
   return initial;
 }
 
+/**
+ * Persists a profile snapshot to localStorage.
+ * @param uid  - Firebase Auth UID.
+ * @param data - The profile data to store.
+ */
 export function setLocalProfile(uid: string, data: LocalProfileData): void {
   try {
     localStorage.setItem(key(uid), JSON.stringify(data));
   } catch {}
 }
 
+/**
+ * Atomically increments green points and/or sustainability score in the local cache.
+ * The sustainability score is capped at SCORE_CAP (99).
+ * @param uid   - Firebase Auth UID.
+ * @param delta - Partial increments to apply.
+ * @returns The updated profile.
+ */
 export function incrementLocalProfile(
   uid: string,
   delta: { greenPoints?: number; sustainabilityScore?: number }
@@ -61,6 +83,12 @@ export function incrementLocalProfile(
   return updated;
 }
 
+/**
+ * Merges Firestore profile data into the local cache, keeping whichever value is higher
+ * for each metric so offline edits are never overwritten by a stale server snapshot.
+ * @param uid           - Firebase Auth UID.
+ * @param firestoreData - Partial profile fetched from Firestore.
+ */
 export function mergeFirestoreProfile(
   uid: string,
   firestoreData: { greenPoints?: number; sustainabilityScore?: number }

@@ -30,6 +30,11 @@ export const CHALLENGES: Challenge[] = [
   },
 ];
 
+/**
+ * Returns the first challenge the user has not yet completed, or null when all
+ * challenges are done.
+ * @param completedIds - Array of challenge IDs already completed by the user.
+ */
 export function getNextChallenge(completedIds: string[] = []): Challenge | null {
   return CHALLENGES.find((c) => !completedIds.includes(c.id)) || null;
 }

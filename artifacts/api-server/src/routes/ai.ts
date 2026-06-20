@@ -1,9 +1,5 @@
 import { Router, type IRouter } from "express";
-import {
-  GoogleGenerativeAI,
-  HarmBlockThreshold,
-  HarmCategory,
-} from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from "@google/generative-ai";
 import { requireAuth } from "../middlewares/requireAuth";
 
 const router: IRouter = Router();
@@ -17,15 +13,31 @@ function getGemini() {
 }
 
 const safetySettings = [
-  { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+  },
 ];
 
 router.post("/ai/chat", requireAuth, async (req, res) => {
   try {
-    const { history = [], userInput, userContext } = req.body as {
+    const {
+      history = [],
+      userInput,
+      userContext,
+    } = req.body as {
       history: { role: string; text: string }[];
       userInput: string;
       userContext: {
@@ -94,7 +106,11 @@ Instruction: Provide a concise, 2-sentence actionable sustainability tip. Be spe
 
 router.post("/ai/insights", requireAuth, async (req, res) => {
   try {
-    const { totalEmissions, emissionsBreakdown, userName = "User" } = req.body as {
+    const {
+      totalEmissions,
+      emissionsBreakdown,
+      userName = "User",
+    } = req.body as {
       totalEmissions: number;
       emissionsBreakdown: {
         transportation: number;

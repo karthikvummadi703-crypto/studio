@@ -7,6 +7,11 @@ export const LEVEL_CONFIG: Record<Level, { min: number; max: number; color: stri
   "Planet Guardian": { min: 1001, max: Infinity, color: "#52d9a9" },
 };
 
+/**
+ * Maps a green-points total to the corresponding user level tier.
+ * @param points - Accumulated green points for the user.
+ * @returns The matching Level string.
+ */
 export function getLevelFromPoints(points: number): Level {
   if (points <= 100) return "Seedling";
   if (points <= 500) return "Eco Warrior";
